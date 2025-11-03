@@ -1,0 +1,50 @@
+    <!-- Made by Jarod Moore -->
+    <!-- Temporary "landing page" with buttons for API testing functions -->
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+</head>
+<body>
+    <h1>Landing Page</h1>
+    <h2>Testing Actions</h2>
+
+    <!-- View Calendars -->
+    <form action="/calendars" method="get">
+        <button name="foo" value="">Calendars</button>
+    </form>
+
+     <!-- View calendar events. Uses /newCalendar created calendar, or the user's "primary" calendar -->
+    <form action="/events" method="get">
+        <button name="calendar" value="">Events</button>
+    </form>
+
+     <!-- Creates a new Calendar -->
+    <form action="/newCalendar" method="get">
+        <button name="foo" value="">newCalendar</button>
+    </form>
+
+     <!-- Creates a new Event, for the given calendar -->
+    <form action="/newEvent" method="get">
+        <button name="foo" value="">newEvent</button>
+    </form>
+
+    <!-- Updates an Event's data, for the given calendarID, and eventID -->
+    <form action="/updateEvent" method="get">
+        <button name="foo" value="">updateEvent</button>
+    </form>
+
+    <!-- Deletes an event, using the given calendarID and eventID -->
+    <form action="/deleteEvent" method="get">
+        <button name="foo" value="">deleteEvent</button>
+    </form>
+
+    <!-- Testing function, deletes an entire calendar, and its events, for easy clean up after testing. -->
+    <form action="/clean" method="get">
+        <button name="foo" value="">Clean-up</button>
+    </form>
+
+</form>
+</body>
+</html>

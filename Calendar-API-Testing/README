@@ -1,0 +1,41 @@
+Built by Jarod Moore
+================================================================================================================
+"Test bed" for learning how the google calendar API calls work, and getting some basic versions of some of the
+calls implemented, to see how it interacts with the API.
+================================================================================================================
+Uses the nodejs with the following npm packages:
+dotenv
+express
+googleapis
+================================================================================================================
+To run it, you'll run "node index.js" in the console, while in this directory.
+If errors occur, you may need to run "npm i <package>" for each of the three npm packages listed above.
+
+This current version has a really basic "front end" with landing.html, and node.js hosts the application on localhost:3000. Landing.html basically just has a set of buttons that perform different API calls, related to what they say.These are done by redirecting to different subdirectory, which is picked up by the node.js server, which will perform different actions based off the subdirectory given. This will likely be changed in the future, but it was the first way that worked well for me to perform consistent testing on these API calls.
+
+===============================================================================================================
+These different functions are used with express' "app.get() function, with the subdirectories as follows:
+================================================================================================================
+"/" - This is the root, which redirects you to authenticate with a google account before being allowed into the landing page.
+
+"/redirect" - This is where you get sent after authentication. Used to provide a success message, but now it just redirects you again over to /landing
+
+"/landing" - This just serves you landing.html, with the button functions for the remaining subdirectories. Each one performs a function using the Calendar API.
+
+"/calendars" - Performs the "calendarList.list()" API call, which gives you JSON data of all of the autneticated users' different calendars on their google account.
+
+"/events" - Displays JSON data of all of the events of a given calendar. If the "newCalendar" button has been pressed, then it will display the events of the created calendar. If not, It will use the authenticated account's 'primary' calendar instead. This is done for testing purposes, to see if it correctly displays events from all calendars, and one calendar.
+
+"/newCalendar" - Performs the "calendars.insert()" API call, which creates a "new secondary calendar" on the authenticated account. It also sets the "calendarID" variable to match it's calendar ID, for easy debugging and testing.
+
+"/newEvent" - Performs the "events.insert()" API call, which takes in a calendarID, and creates a new event with the given information, as an event for the given calendarID. These parameters involve date, start/end time, time zone as requirements, but there are many more fiels that can be useful. Sets the "eventID" to be the ID of the newly created event, for easy initial debugging and testing.
+
+"/updateEvent" - Performs the "events.update()" API call, which takes a calendarID and an eventID as parameters, as well as the new eventData resource, which contains any information that you want to add or change from the original. To remove data, you should also be able to use this to add "empty" fields to remove elements of the event. Currently just uses the "stored" eventID after one is created, but it is really easy to give it any existing eventID.
+
+"/deleteEvent" - Performs the "events.delete()" API call, which takes a calendarID and eventID as params. This will delete the given event from the calendar given. Also currently uses the "stored" eventID after one is created.
+
+"/clean" - Performs the "calendars.delete()" API call. This will delete a given calendar, using its calendarID. I mostly created this to quickly delete calendars and events that I created during testing, because its done in one click, instead of navigating multiple menus to do it manually on my actual Google Calendar.
+================================================================================================================
+
+A few more functions will likely need to be made, and things will need to be reworked, but these are the main functions I've made so far, and they handle the bulk of what we want our calendar to do. The API calls themselves area actually quite simple to do, especially once we've got an easy way to provide the API calls with the parameter data that they require.
+
