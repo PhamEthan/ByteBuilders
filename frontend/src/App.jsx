@@ -6,12 +6,15 @@ import About from "./pages/About";
 import {Routes, Route} from "react-router-dom"
 import NavBar from "./Components/NavBar";
 import Footer from "./Components/Footer";
+import React, { useState } from "react";
 
 
 function App() {
+  const [isDark, setDark] = useState(false);
+
   return (
-    <div>
-      <NavBar />
+    <div className="app-container" data-theme={isDark ? "dark" : "light"}> 
+      <NavBar isChecked={isDark} handleChange={() => setDark(!isDark)} />
       <main className ="main">
         <Routes>
           <Route path="/" element={<Home />}/>
