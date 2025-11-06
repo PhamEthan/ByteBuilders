@@ -1,11 +1,4 @@
 
-.login h2{
-    font-size: 1.875rem;
-    font-weight: 300;
-    color: #ec4899;
-    margin-bottom: 1rem;
-    origin/main
-}
 .login {
   display:flex;
   flex-direction: column;
@@ -138,3 +131,4 @@
 }
 .submit-btn:hover::after {
   width: 100%;
+}
