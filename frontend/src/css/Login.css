@@ -1,3 +1,11 @@
+
+.login h2{
+    font-size: 1.875rem;
+    font-weight: 300;
+    color: #ec4899;
+    margin-bottom: 1rem;
+    origin/main
+}
 .login {
   display:flex;
   flex-direction: column;
@@ -6,11 +14,13 @@
   min-height: 100vh;
   width: 100%;
   background: linear-gradient(to bottom, #f8daa3, #e8e1e7f7);
+  background-color: var(--bg-color);
+  transition: background-color .3s ease-in-out; 
   padding-bottom: 4rem;
   gap:2rem;
   
 }
-.login h1{
+.login h1 {
   font-style: italic;
   font-size: 2.5rem;
   color:#463408ea;
@@ -128,4 +138,3 @@
 }
 .submit-btn:hover::after {
   width: 100%;
-}
