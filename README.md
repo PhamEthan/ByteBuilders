@@ -6,8 +6,8 @@
 2. npm run dev - To Run Program
 
 # DOCKER SET UP
-1. docker build -t caregiver-app
+1. docker compose build
 
 # HOW TO RUN DOCKER
-1. docker-compose up - to turn off docker server
-2. docker-compose down - to turn off docker server
+1. docker up - to turn off docker server
+2. docker down - to turn off docker server
