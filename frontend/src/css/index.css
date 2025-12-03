@@ -9,6 +9,20 @@
   --toggle-bg: #f0eb9d;
   --toggle-fg: #ffd000;
   --opacity: rgba(0, 0, 0, 0.2);
+
+  --calendar-button-bg: #ec4899;
+  --calendar-button-hover: #db2777;
+  --calendar-button-active: #db2777;
+
+  --calendar-header-bg: #faebaed1;
+  --calendar-header-border: #c3b478;  
+
+  --calendar-day-bg: #fefbef;
+  --calendar-day-border: #d6d0b7;
+
+  --calendar-today-bg: #faf1cc;
+  
+
 }
 
 * {
@@ -80,6 +94,19 @@ button:active {
   --toggle-bg:#283452;
   --toggle-fg: #0ab6ff;
   --opacity: rgba(0, 0, 0, 0.6);
+
+  --calendar-button-bg: #db2777;
+  --calendar-button-hover: #ec4899;
+  --calendar-button-active: #ec4899;
+
+  --calendar-header-bg: #b3a17c;
+  --calendar-header-border: #5b5b5b;
+
+  --calendar-day-bg: #5b5252;
+  --calendar-day-border: #8a8989;
+
+  --calendar-today-bg: #b3a17c;
+
 }
 
 @media (prefers-color-scheme: light) {
@@ -90,9 +117,9 @@ button:active {
   a:hover {
     color: #747bff;
   }
-  button {
+ /* button {
     background-color: #f9f9f9;
-  }
+  }*/
 }
 
 
