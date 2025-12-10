@@ -16,19 +16,19 @@
 .login h1 {
   font-style: italic;
   font-size: 2.5rem;
-  color:#463408ea;
+  color:#5d5757;
   font-weight: 600;
 }
 
 .login h2{
     font-size: 1.875rem;
     font-weight:400;
-    color: #b45309;
+    color: var(--secondary-text);
     margin-bottom: 1rem;
 }
 
 .login-container{
-  background-color:rgb(249, 246, 241);
+  background-color:var(--bg-color);
   padding: 2rem;
   border-radius: 10px;
   box-shadow: 0 5px 15px rgba(0,0,0,0.3);
@@ -73,24 +73,25 @@
 
 .form-label {
   font-weight: 600;
+  color: var(--primary-text);
 }
 .password-field{
   display: flex;
   flex-direction: column;
   align-items: flex-start
   
- 
 }
 
 .switch-txt{
   margin-top: 1rem;
   font-size: .9rem;
+  color: var(--primary-text);
 }
 .switch-btn{
   margin-left:.3rem;
   background: none;
   border: none;
-  color: #b45309;
+  color: var(--secondary-text);
 
 }
 .switch-btn:focus{
@@ -98,9 +99,10 @@
 }
 .switch-btn:hover {
   text-decoration: underline;
+  background-color: white;
 }
 .error {
-  color:red
+  color:rgb(255, 69, 69)
 }
 
 .submit-btn {

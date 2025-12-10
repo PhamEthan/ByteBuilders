@@ -13,3 +13,93 @@
     color: #ec4899;
     margin-bottom: 1rem;
 }
+.calendar-container {
+  padding: 2rem;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.fc {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  color: var(--primary-text);
+}
+
+.fc-header-toolbar {
+  background-color: var(--bg-color);
+  color: var(--primary-text);
+  border-bottom: 1px solid var(--calendar-day-border) !important;
+  margin-bottom: 0 !important;
+  padding-bottom:  0.75rem !important;
+  
+}
+
+.fc-button {
+  background-color: var(--calendar-button-bg) !important;
+}
+.fc-button:hover {
+    background-color: var(--calendar-button-hover)!important;
+    box-shadow: 0 4px 6px rgba(20, 184, 166, 0.3);
+    transform: translateY(-1px);
+}
+
+.fc-button:focus {
+  box-shadow: none !important;
+ 
+}
+.fc-button-active {
+  background-color: var(--calendar-button-active)!important;
+  
+}
+.fc-col-header-cell{
+  background-color: var(--calendar-header-bg) !important;
+  border: 1px solid var(--calendar-header-border) !important;
+}
+.fc-col-header-cell-cushion {
+  color: var(--primary-text) !important;
+}
+
+.fc-daygrid-day-number {
+  color: var(--primary-text);
+}
+.fc-daygrid-day {
+  background-color: var(--calendar-day-bg) !important;
+  border: 1px solid var(--calendar-day-border) !important;
+}
+.fc-day-today {
+  background-color: var(--calendar-today-bg) !important;
+}
+
+.fc,
+.fc-scrollgrid,
+.fc-scrollgrid-section,
+.fc-scrollgrid-section > td,
+.fc-scrollgrid-section-body,
+.fc-scroller,
+.fc-scrollgrid-sync-table,
+.fc-daygrid-day,
+.fc-col-header-cell,
+.fc-header-toolbar {
+    transition: background-color .30s ease-in-out, 
+                border-color .30s ease-in-out,
+                color .30s ease-in-out;
+}
+
+.fc-timegrid-axis,
+.fc-timegrid-axis-frame {
+    background-color: var(--calendar-day-bg) !important;
+    color: var(--primary-text) !important;
+    border-color: var(--calendar-day-border) !important;
+    transition: background-color .3s ease-in-out, color .3s ease-in-out;
+}
+
+
+
+.fc-timegrid-col:not(.fc-day-today) .fc-timegrid-col-frame {
+  background-color: var(--calendar-day-bg);
+  transition: background-color .3s ease-in-out;
+}
+
+
+.fc-theme-standard {
+  --fc-border-color: var(--calendar-day-border);
+}
