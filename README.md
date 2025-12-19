@@ -2,9 +2,10 @@
 
 
 # HOW TO BUILD PROGRAM 
-1. npm install prisma @prisma/client pg bcryptjs express googleapis jsonwebtoken 
-2. npx prisma init
-3. npx prisma generate 
+1. npm init -y
+2. npm install prisma @prisma/client pg bcryptjs express googleapis jsonwebtoken 
+3. npx prisma init
+4. npx prisma generate 
 
 # DOCKER SET UP
 1. docker compose build
