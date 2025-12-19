@@ -1,17 +1,38 @@
 import jwt from 'jsonwebtoken'
+import prisma from '../prismaClient.js'
 
-function authMiddleware (req, res, next){
-    const token = req.headers['authorization']
-    //check if token exists
-    if(!token) {return res.status(401).json({message: "No Token provided"})}
+async function authMiddleware(req, res, next) {
+  const authHeader = req.headers['authorization']
 
-    //check if token is correct
+  if (!authHeader) {
+    return res.status(401).json({ message: "No token provided" })
+  }
 
-    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-        if (err) {return res.status(401).json({message: "Invalid Token"})}
-        req.userId = decoded.id
-        next()
+  // Expect "Bearer TOKEN"
+  const token = authHeader.startsWith('Bearer ')
+    ? authHeader.substring(7)
+    : authHeader
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET)
+
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.id }
     })
+
+    if (!user) {
+      return res.status(401).json({ message: "User not found" })
+    }
+
+    // Attach both full user and userId
+    req.user = user          
+    req.userId = user.id     
+
+    next()
+  } catch (err) {
+    console.error('JWT error:', err.message)
+    return res.status(401).json({ message: "Invalid token" })
+  }
 }
 
 export default authMiddleware

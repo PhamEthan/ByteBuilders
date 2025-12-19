@@ -3,7 +3,7 @@ import path, {dirname, join} from 'path'
 import { fileURLToPath } from 'url'
 import authRoutes from './routes/authRoutes.js'
 import appointmentRoutes from './routes/appointmentRoutes.js'
-import authMiddleware from './middleware/authMiddleware.js'
+
 
 const app = express()
 const PORT = process.env.PORT || 5003
@@ -24,7 +24,8 @@ app.get('/', (req, res) => {
 
 //ROUTES
 app.use('/auth', authRoutes)
-app.use('/appointments',authMiddleware, authRoutes)
+app.use('/appointments', appointmentRoutes)
+
 
 app.listen(PORT, () => {
 console.log(`Server has started on port: ${PORT}`)
