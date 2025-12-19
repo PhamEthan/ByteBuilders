@@ -8,7 +8,7 @@
 
 # DOCKER SET UP
 1. docker compose build
-2. docker comepose run app npx prisma dev --name init 
+2. docker compose run app npx prisma dev --name init 
 
 # HOW TO RUN DOCKER/THE PROGRAM 
 1. docker compose up - to turn off docker server
