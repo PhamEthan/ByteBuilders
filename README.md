@@ -15,4 +15,4 @@
 2. docker compose down - to turn off docker server
 
 # HOW TO VIEW
-1. Localhost:8003 
+1. Localhost:5003 
