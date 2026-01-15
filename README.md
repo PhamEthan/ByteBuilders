@@ -17,7 +17,7 @@
 2. docker compose down - to turn off docker server
 
 # HOW TO VIEW
-1. Localhost:5003 - open user log in portal 
+1. http://localhost:5003 - open user log in portal 
 2. http://localhost:5003/appointments/login - google auth setup for calendar link 
 # Comunicate to Database with SQL
 1. docker exec -it postgres-db psql -U postgres -d caregiverapp - enter postgres UI
