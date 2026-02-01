@@ -3,10 +3,16 @@ import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
+import { useState } from "react";
 
 function Calendar(){
+
+    const [event, setEvent] = useState([
+        
+    ])
+
     return (
-        <div>
+        <div className="calendar-container">
             <FullCalendar
             plugins={[dayGridPlugin,timeGridPlugin,interactionPlugin]}
             initialView={"dayGridMonth"}
