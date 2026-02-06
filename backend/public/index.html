@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Appointment Booking</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <link rel="stylesheet" href="/fanta.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"
+        integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        /* Small inline styles for the booking UI */
+        #appointments {
+            max-width: 700px;
+            margin: 2rem auto;
+            padding: 1.5rem;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+        }
+
+        #appointments h2,
+        #appointments h3 {
+            margin-top: 0;
+        }
+
+        .slot {
+            border-bottom: 1px solid #ddd;
+            padding: 0.5rem 0;
+        }
+
+        .slot:last-child {
+            border-bottom: none;
+        }
+
+        .slot small {
+            display: block;
+            color: #555;
+        }
+
+        .slot button {
+            margin-top: 0.25rem;
+        }
+
+        #statusGlobal {
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        #myAppointmentsList .slot {
+            border-bottom: none;
+            padding: 0.25rem 0;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- AUTH SECTION -->
+    <section id="auth">
+        <div>
+            <h2 className="sign-up-text">Login</h2>
+            <p>Create an account!</p>
+        </div>
+
+        <p id="error" style="display: none;"></p>
+        <input id="emailInput" placeholder="Email / Username" />
+        <input id="passwordInput" placeholder="********" type="password" />
+        <button id="authBtn" onclick="authenticate()">
+            Submit
+        </button>
+        <hr />
+        <div class="register-content">
+            <p>Don&apos;t have an account?</p>
+            <button onclick="toggleIsRegister()" id="registerBtn">Sign up</button>
+        </div>
+    </section>
+
+    <!-- Old todo header/nav/main - kept hidden -->
+    <header style="display: none;">
+        <h1 class="text-gradient">You have 0 open tasks.</h1>
+    </header>
+    <nav style="display: none;" class="tab-container">
+        <button onclick="changeTab && changeTab('All')" class="tab-button  selected-tab">
+            <h4>All <span>(0)</span></h4>
+        </button>
+        <button onclick="changeTab && changeTab('Open')" class="tab-button  ">
+            <h4>Open <span>(0)</span></h4>
+        </button>
+        <button onclick="changeTab && changeTab('Complete')" class="tab-button  ">
+            <h4>Complete <span>(0)</span></h4>
+        </button>
+        <hr />
+    </nav>
+    <main style="display: none;"></main>
+
+    <!-- APPOINTMENTS SECTION (HIDDEN UNTIL LOGIN) -->
+    <section id="appointments" style="display: none;">
+        <h2>Available Appointments</h2>
+        <p>These come from your caregiver's Google Calendar (events named <strong>"AVAILABLE"</strong>).</p>
+        <button id="loadAvailableBtn">Load Available Slots</button>
+        <div id="statusGlobal"></div>
+        <div id="availableList" style="margin-top: 1rem;">No available slots loaded yet.</div>
+
+        <hr style="margin: 2rem 0;">
+
+        <h3>Cancel Appointment</h3>
+        <p>Paste the Google Event ID you booked (shown in list above / below) to cancel it.</p>
+        <input id="cancelEventId" placeholder="Google event ID" />
+        <button id="cancelBtn">Cancel Appointment</button>
+
+        <hr style="margin: 2rem 0;">
+
+        <h3>My Appointments</h3>
+        <p>These are the appointment slots you have already booked.</p>
+        <div id="myAppointmentsList">
+            You have no booked appointments.
+        </div>
+
+        <div style="margin-top: 2rem; text-align: right;">
+            <button id="logoutBtn">Log out</button>
+        </div>
+    </section>
+
+</body>
+
+<script>
+    // ===== GLOBAL STATE =====
+    let token = localStorage.getItem('token') || null
+    let isAuthenticating = false
+    let isRegistration = false
+
+    const apiBase = '/'
+
+    // ===== ELEMENTS =====
+    const authSection = document.getElementById('auth')
+    const main = document.querySelector('main')
+    const errorEl = document.getElementById('error')
+    const email = document.getElementById('emailInput')
+    const password = document.getElementById('passwordInput')
+    const registerBtn = document.getElementById('registerBtn')
+    const authBtn = document.getElementById('authBtn')
+
+    // appointment UI elements
+    const appointmentsSection = document.getElementById('appointments')
+    const loadAvailableBtn = document.getElementById('loadAvailableBtn')
+    const availableList = document.getElementById('availableList')
+    const statusGlobal = document.getElementById('statusGlobal')
+    const cancelEventIdInput = document.getElementById('cancelEventId')
+    const cancelBtn = document.getElementById('cancelBtn')
+    const myAppointmentsList = document.getElementById('myAppointmentsList')
+    const logoutBtn = document.getElementById('logoutBtn')
+
+    // ===== SMALL HELPERS =====
+    function setGlobalStatus(msg, isError = false) {
+        statusGlobal.textContent = msg || ''
+        statusGlobal.style.color = isError ? 'red' : 'green'
+    }
+
+    function showAuth() {
+        authSection.style.display = 'flex'
+        appointmentsSection.style.display = 'none'
+        main.style.display = 'none'
+    }
+
+    function showDashboard() {
+        authSection.style.display = 'none'
+        appointmentsSection.style.display = 'block'
+        main.style.display = 'none'
+    }
+
+    // ===== AUTH UI TOGGLE =====
+    function toggleIsRegister() {
+        isRegistration = !isRegistration
+        registerBtn.innerText = isRegistration ? 'Sign in' : 'Sign up'
+        document.querySelector('#auth > div h2').innerText = isRegistration ? 'Sign Up' : 'Login'
+        document.querySelector('#auth > div p').innerText = isRegistration ? 'Create an account!' : 'Welcome back!'
+        document.querySelector('.register-content p').innerText =
+            isRegistration ? 'Already have an account?' : 'Don\'t have an account?'
+        document.querySelector('.register-content button').innerText =
+            isRegistration ? 'Sign in' : 'Sign up'
+    }
+    window.toggleIsRegister = toggleIsRegister
+
+    // ===== AUTH LOGIC =====
+    async function authenticate() {
+        const emailVal = email.value.trim()
+        const passVal = password.value.trim()
+
+        if (
+            isAuthenticating ||
+            !emailVal ||
+            !passVal ||
+            passVal.length < 6
+        ) {
+            errorEl.innerText = 'Please enter a username and a password (min 6 chars).'
+            errorEl.style.display = 'block'
+            return
+        }
+
+        errorEl.style.display = 'none'
+        isAuthenticating = true
+        authBtn.innerText = 'Authenticating...'
+
+        try {
+            let res
+            if (isRegistration) {
+                // register
+                res = await fetch(apiBase + 'auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: emailVal, password: passVal })
+                })
+            } else {
+                // login
+                res = await fetch(apiBase + 'auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: emailVal, password: passVal })
+                })
+            }
+
+            const data = await res.json().catch(() => ({}))
+
+            if (!res.ok || !data.token) {
+                throw new Error(data.message || 'Failed to authenticate.')
+            }
+
+            token = data.token
+            localStorage.setItem('token', token)
+
+            authBtn.innerText = 'Loading...'
+            showDashboard()
+            setGlobalStatus('Logged in successfully!')
+            loadAvailableSlots()
+            loadMyAppointments()
+        } catch (err) {
+            console.error(err)
+            errorEl.innerText = err.message
+            errorEl.style.display = 'block'
+        } finally {
+            isAuthenticating = false
+            authBtn.innerText = 'Submit'
+        }
+    }
+    window.authenticate = authenticate
+
+    function logout() {
+        token = null
+        localStorage.removeItem('token')
+        setGlobalStatus('')
+        showAuth()
+    }
+    logoutBtn.addEventListener('click', logout)
+
+    // ===== APPOINTMENTS: LOAD AVAILABLE SLOTS =====
+    async function loadAvailableSlots() {
+        if (!token) {
+            setGlobalStatus('Please login first.', true)
+            return
+        }
+
+        availableList.innerHTML = 'Loading...'
+        setGlobalStatus('')
+
+        try {
+            const res = await fetch(apiBase + 'appointments/available', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+
+            if (!res.ok) {
+                const text = await res.text()
+                console.error('Slots error:', text)
+                availableList.innerHTML = 'Failed to load available slots.'
+                setGlobalStatus('Failed to load slots.', true)
+                return
+            }
+
+            const events = await res.json()
+            renderAvailable(events)
+        } catch (err) {
+            console.error(err)
+            availableList.innerHTML = 'Error loading slots.'
+            setGlobalStatus('Error loading slots.', true)
+        }
+    }
+
+    function renderAvailable(events) {
+        if (!events || events.length === 0) {
+            availableList.innerHTML = 'No available slots found.'
+            return
+        }
+
+        availableList.innerHTML = ''
+        events.forEach(ev => {
+            const div = document.createElement('div')
+            div.className = 'slot'
+
+            const startRaw = ev.start?.dateTime || ev.start?.date || 'Unknown'
+            const endRaw = ev.end?.dateTime || ev.end?.date || 'Unknown'
+
+            const startDate = new Date(startRaw)
+            const endDate = new Date(endRaw)
+
+            let startStr = startRaw
+            let endStr = endRaw
+
+            if (!isNaN(startDate.getTime())) {
+                startStr = `${startDate.toLocaleDateString()} ${startDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+            }
+            if (!isNaN(endDate.getTime())) {
+                endStr = `${endDate.toLocaleDateString()} ${endDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+            }
+
+            div.innerHTML = `
+                <strong>${ev.summary || 'AVAILABLE'}</strong>
+                <small>Start: ${startStr}</small>
+                <small>End: ${endStr}</small>
+                <small>Event ID: <code>${ev.id}</code></small>
+            `
+
+            const btn = document.createElement('button')
+            btn.textContent = 'Book this slot'
+            btn.addEventListener('click', () => bookSlot(ev.id))
+
+            div.appendChild(btn)
+            availableList.appendChild(div)
+        })
+    }
+
+    // ===== BOOK SLOT =====
+    async function bookSlot(eventId) {
+        if (!token) {
+            setGlobalStatus('Please login first.', true)
+            return
+        }
+
+        setGlobalStatus('Booking...', false)
+
+        try {
+            const res = await fetch(apiBase + `appointments/book/${eventId}`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+
+            if (!res.ok) {
+                const text = await res.text()
+                console.error('Booking failed:', text)
+                setGlobalStatus('Booking failed.', true)
+                return
+            }
+
+            const data = await res.json().catch(() => ({}))
+            console.log('Booked:', data)
+            setGlobalStatus('Appointment booked!')
+            loadAvailableSlots()
+            loadMyAppointments()
+        } catch (err) {
+            console.error(err)
+            setGlobalStatus('Error booking appointment.', true)
+        }
+    }
+
+    // ===== CANCEL APPOINTMENT =====
+    async function cancelAppointment() {
+        if (!token) {
+            setGlobalStatus('Please login first.', true)
+            return
+        }
+
+        const eventId = cancelEventIdInput.value.trim()
+        if (!eventId) {
+            setGlobalStatus('Please enter an event ID to cancel.', true)
+            return
+        }
+
+        setGlobalStatus('Canceling...', false)
+
+        try {
+            const res = await fetch(apiBase + `appointments/cancel/${eventId}`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+
+            if (!res.ok) {
+                const text = await res.text()
+                console.error('Cancel failed:', text)
+                setGlobalStatus('Cancel failed.', true)
+                return
+            }
+
+            setGlobalStatus('Appointment canceled.')
+            cancelEventIdInput.value = ''
+            loadAvailableSlots()
+            loadMyAppointments()
+        } catch (err) {
+            console.error(err)
+            setGlobalStatus('Error canceling appointment.', true)
+        }
+    }
+
+    // ===== LOAD MY APPOINTMENTS =====
+    async function loadMyAppointments() {
+        if (!token) {
+            if (myAppointmentsList) {
+                myAppointmentsList.textContent = 'Please login first.'
+            }
+            return
+        }
+
+        if (!myAppointmentsList) return
+
+        myAppointmentsList.textContent = 'Loading your appointments...'
+
+        try {
+            const res = await fetch(apiBase + 'appointments/mine', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+
+            if (!res.ok) {
+                myAppointmentsList.textContent = 'Failed to load your appointments.'
+                return
+            }
+
+            const appointments = await res.json()
+
+            if (!appointments || appointments.length === 0) {
+                myAppointmentsList.textContent = 'You have no booked appointments.'
+                return
+            }
+
+            myAppointmentsList.innerHTML = ''
+
+            appointments.forEach(appt => {
+                const start = new Date(appt.startTime)
+                const end = new Date(appt.endTime)
+
+                const div = document.createElement('div')
+                div.className = 'slot'
+                div.innerHTML = `
+                    <strong>
+                        ${start.toLocaleDateString()} 
+                        ${start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        –
+                        ${end.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </strong>
+                    <small>Event ID: <code>${appt.googleEventId || 'N/A'}</code></small>
+                `
+                myAppointmentsList.appendChild(div)
+            })
+        } catch (err) {
+            console.error(err)
+            myAppointmentsList.textContent = 'Error loading your appointments.'
+        }
+    }
+
+    // ===== HOOK UP BUTTONS =====
+    loadAvailableBtn.addEventListener('click', () => {
+        loadAvailableSlots()
+        loadMyAppointments()
+    })
+    cancelBtn.addEventListener('click', cancelAppointment)
+
+    // ===== INITIAL LOAD =====
+    (function init() {
+        if (token) {
+            showDashboard()
+            loadAvailableSlots()
+            loadMyAppointments()
+        } else {
+            showAuth()
+        }
+    })()
+</script>
+
+</html>

@@ -1,0 +1,34 @@
+{
+  "name": "actual_test",
+  "version": "1.0.0",
+  "description": "1. npm init -y 2. npm install express 3. npm install --save-dev nodemon 4. npm install express bcryptjs googleapis jsonwebtoken pg  5. npm install prisma @prisma/client  6. npx prisma init 7. npx prisma generate  8. docker compose build  9. docker compose run app npx prisma migrate dev --name init",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch -r dotenv/config ./src/server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JosephCardoza03/actual_test.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/JosephCardoza03/actual_test/issues"
+  },
+  "homepage": "https://github.com/JosephCardoza03/actual_test#readme",
+  "dependencies": {
+    "@prisma/client": "^6.19.2",
+    "bcryptjs": "^3.0.3",
+    "express": "^5.2.1",
+    "googleapis": "^166.0.0",
+    "jsonwebtoken": "^9.0.3",
+    "pg": "^8.18.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.11",
+    "prisma": "^6.19.2"
+  }
+}
