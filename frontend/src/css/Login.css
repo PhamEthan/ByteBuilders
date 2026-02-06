@@ -1,0 +1,136 @@
+
+.login {
+  display:flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  width: 100%;
+  background: linear-gradient(to bottom, #f8daa3, #e8e1e7f7);
+  background-color: var(--bg-color);
+  transition: background-color .3s ease-in-out; 
+  padding-bottom: 4rem;
+  gap:2rem;
+  
+}
+.login h1 {
+  font-style: italic;
+  font-size: 2.5rem;
+  color:#5d5757;
+  font-weight: 600;
+}
+
+.login h2{
+    font-size: 1.875rem;
+    font-weight:400;
+    color: var(--secondary-text);
+    margin-bottom: 1rem;
+}
+
+.login-container{
+  background-color:var(--bg-color);
+  padding: 2rem;
+  border-radius: 10px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+  width: 320px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  
+}
+
+.login-form{
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap: .8rem;
+}
+
+.form-group{
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+.form-input{
+  padding: .5rem .6rem;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 1rem;
+  width: 100%;
+  
+}
+.form-input:focus {
+  outline: none
+}
+.form-input::placeholder {
+  color: #b7b6b6af;
+  opacity: 8;
+ 
+}
+.form-input:focus::placeholder {
+  color:transparent
+}
+
+.form-label {
+  font-weight: 600;
+  color: var(--primary-text);
+}
+.password-field{
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start
+  
+}
+
+.switch-txt{
+  margin-top: 1rem;
+  font-size: .9rem;
+  color: var(--primary-text);
+}
+.switch-btn{
+  margin-left:.3rem;
+  background: none;
+  border: none;
+  color: var(--secondary-text);
+
+}
+.switch-btn:focus{
+  outline: none;
+}
+.switch-btn:hover {
+  text-decoration: underline;
+  background-color: white;
+}
+.error {
+  color:rgb(255, 69, 69)
+}
+
+.submit-btn {
+  background-color: #ec4899 ;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  padding: .6rem;
+  font-size: 1rem;
+  cursor: pointer;
+  position: relative;
+  transition: background-color 0.3s ease;
+}
+
+.submit-btn:hover {
+  background-color: #db2777;
+}
+
+.submit-btn::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background-color: #db2777;
+  transition: width 0.3s ease;
+}
+.submit-btn:hover::after {
+  width: 100%;
+}
