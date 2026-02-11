@@ -24,14 +24,20 @@ const __dirname = dirname(__filename)
 
 //MIDDLEWARE
 app.use(express.json())
+
+/*
 //Hands over HTML from /public Dir
 app.use(express.static(path.join(__dirname, '../public')))
 // Now Display HTML
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'))
 })
+*/
 
-
+//Temporary redirect back to the actual frontend
+app.get('/', (req, res) => {
+    res.redirect("http://localhost:3000/")
+})
 
 //ROUTES
 app.use('/auth', authRoutes)

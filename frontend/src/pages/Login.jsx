@@ -7,7 +7,7 @@ import { useState } from "react"
 // ===== GLOBAL STATE =====
 let token = localStorage.getItem('token') || null
 let isAuthenticating = false
-let isRegistration = false
+let isLogin
 
 const apiBase = 'http://localhost:5003/'
 
@@ -35,20 +35,14 @@ function Login(){
         resolver: yupResolver(schema),
     });
 
+    //When submitting login or registration data, we (currently) output it to the console log for debugging, and then run an authentication call with the database server
     const onSubmit = (data) => {
         console.log(isLogin? "Logging in: " : "Registering: ", data)
-        //Login call
-        //authenticate()
-        //Register Call
-        if(isLogin)
-        {
-            isRegistration = false
-        }
-        else
-        {
-            isRegistration = true
-        }
+
+        //calls to authenticate, to speak to the authentication middleware, to check against current entries in the database.
         authenticate(data.email, data.password)
+
+        //TODO: Add redirect functionality, after authenticated login or registration.
 
         reset()
     };
@@ -115,11 +109,10 @@ function Login(){
 }
 
 
-async function authenticate(email, password) {
-    const emailVal = email
-    const passVal = password
-    console.log(email, password)
+async function authenticate(emailVal, passVal) {
+    console.log(emailVal, passVal)
 
+    //TODO: Make sure that passVal.length is consistent with the password length for the input box on the frontend
     if (
         isAuthenticating ||
         !emailVal ||
@@ -131,7 +124,7 @@ async function authenticate(email, password) {
 
     try {
         let res
-        if (isRegistration) {
+        if (!isLogin) {
             // register
             res = await fetch(apiBase + 'auth/register', {
                 method: 'POST',
@@ -156,6 +149,8 @@ async function authenticate(email, password) {
         token = data.token
         localStorage.setItem('token', token)
 
+
+        //TODO: Add things here to output errors to the frontend, for users to see, instead of only showing it in the browser's console
     } catch (err) {
 
     } finally {
