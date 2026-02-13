@@ -21,6 +21,10 @@
   --calendar-day-border: #d6d0b7;
 
   --calendar-today-bg: #faf1cc;
+
+  --calendar-event-bg: #ec4899;
+  --calendar-event-text: #ffffff;
+  --calendar-event-border: #ec4899;
   
 
 }
@@ -106,6 +110,9 @@ button:active {
   --calendar-day-border: #8a8989;
 
   --calendar-today-bg: #b3a17c;
+
+  --calendar-event-bg: #ec4899;
+  --calendar-event-border: #ec4899; 
 
 }
 
