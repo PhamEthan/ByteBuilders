@@ -1,0 +1,29 @@
+.employee-container {
+  text-align: center;
+  padding: 60px;
+}
+
+.tile-container {
+  display: flex;
+  justify-content: center;
+  gap: 60px;
+  margin-top: 60px;
+  flex-wrap: wrap; 
+}
+
+.tile {
+  width: 280px;         
+  height: 280px;         
+  font-size: 26px;      
+  font-weight: bold;  
+  border: none;
+  cursor: pointer;
+  background-color: #ec4899;
+  color: white;
+  transition: 0.3s ease;
+}
+
+.tile:hover {
+  transform: scale(1.08);
+  background-color: #ec4899;
+}

@@ -11,7 +11,7 @@ function Footer() {
                 <div className="footer-links">
                     <Link to="/features" className="footer-link">Features</Link>
                     <Link to="/learn" className="footer-link">Learn more</Link>
-                    <Link to="/support" className="footer-link">Support</Link>
+                    <Link to="/employee" className="footer-link">Employee Login</Link>
                 </div>
                 <div className="footer-socials">
                     <button className="social-icon" aria-label="Instagram">*</button>
