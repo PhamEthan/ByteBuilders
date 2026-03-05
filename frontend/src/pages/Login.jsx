@@ -3,12 +3,13 @@ import { useForm } from "react-hook-form"
 import {yupResolver} from '@hookform/resolvers/yup'
 import * as yup from 'yup'
 import { useState } from "react"
+import { register as registerUser } from "../api/auth"
 
 
 function Login(){
 
 
-    const [isLogin, setIsLogin] = useState(true);
+    const [isLogin, setIsLogin] = useState(false);  //CHANGED TO FALSE
 
     const loginSchema = yup.object().shape({
         email: yup.string().email("Invalid format").required("Email is required"),
@@ -28,11 +29,28 @@ function Login(){
         resolver: yupResolver(schema),
     });
 
+    const onSubmit = async(data) => {
+        try{
+            console.log("Registering:", data);
+
+            const result=await registerUser(data.email, data.password);
+            console.log("successful register:", result);
+            localStorage.setItem("token", result.token);
+
+            reset();
+
+        }
+        catch (err){
+            console.log(err.message);
+        }
+    }
+
+/*
     const onSubmit = (data) => {
         console.log(isLogin? "Logging in: " : "Registering: ", data)
         reset()
     };
-
+*/
     return (
         <div className="login">
             <h1>{isLogin ? "Welcome Back!" : "Welcome!"}</h1>
@@ -42,7 +60,7 @@ function Login(){
                 <form onSubmit={handleSubmit(onSubmit)} className="login-form">
                     <div className="form-group">
                         <label htmlFor="email" className="form-label">Email</label>
-                        <input type="text" placeholder="ex@hotmail.com" {...register("email")}
+                        <input type="text" placeholder="ex@email.com" {...register("email")}
                             className="form-input"/>
                         <p className="error">{errors.email?.message}</p>
 

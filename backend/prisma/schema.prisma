@@ -1,0 +1,49 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  username     String   @unique
+  password     String
+
+  fullName     String?    // optional for now
+  dateOfBirth  DateTime?  // optional for now
+
+  role         UserRole @default(PATIENT)
+
+  appointments Appointment[]
+}
+
+model Appointment {
+  id            Int      @id @default(autoincrement())
+
+  startTime     DateTime
+  endTime       DateTime
+  
+  status        AppointmentStatus @default(AVAILABLE)
+
+  googleEventId String?  @unique  // 🔒 one DB appointment per Google event
+
+  patientId     Int?
+  patient       User?    @relation(fields: [patientId], references: [id])
+
+  createdAt     DateTime @default(now())
+}
+
+enum UserRole {
+  PATIENT
+  ADMIN
+  CAREGIVER
+}
+
+enum AppointmentStatus {
+  AVAILABLE
+  BOOKED
+  CANCELLED
+}

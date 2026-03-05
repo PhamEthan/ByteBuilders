@@ -15,8 +15,10 @@
 }
 .calendar-container {
   padding: 2rem;
-  max-width: 1100px;
-  margin: 0 auto;
+  width: 100%;
+  
+  background-color: var(--bg-color);
+  transition: background-color 0.3s ease-in-out;
 }
 
 .fc {
@@ -84,6 +86,10 @@
                 color .30s ease-in-out;
 }
 
+.fc-daygrid-event-dot {
+  display: none;
+}
+
 .fc-timegrid-axis,
 .fc-timegrid-axis-frame {
     background-color: var(--calendar-day-bg) !important;
@@ -102,4 +108,47 @@
 
 .fc-theme-standard {
   --fc-border-color: var(--calendar-day-border);
+}
+.fc-event {
+  background-color: var(--calendar-event-bg) !important;
+  border-color: var(--calendar-event-border) !important;
+  color: var(--calendar-event-text) !important;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+
+}
+.modal {
+  background-color: white;
+  padding: 25px;
+  border-radius: 5px;
+  width: 300px;
+  text-align: center;
+}
+
+.modal input {
+  width: 100%;
+  padding: 3px;
+  margin: 20px 0;
+  border-radius: 3px;
+  border: 1px solid ;
+
+}
+.modal-btn {
+  
+  display: flex;
+  justify-content: center;
+  gap: 5px;
+  
+  
+}
+.modal-btn button {
+  padding: 10px;
 }
