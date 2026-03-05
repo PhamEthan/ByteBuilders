@@ -3,13 +3,17 @@
   flex-direction: column;
   min-height: 100vh;
   width: 100%;
-  background-color: #ffffff;
+  background-color: var(--bg-color);
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: bottom;
+  transition: background-color .3s ease-in-out;
 }
 
 .hero {
     position: relative;
     background: linear-gradient(to bottom, #fef3c7 0%, #fef3c7 100%);
-    padding: 6rem 2rem;
+    padding: 10rem 2rem;
     text-align: center;
     overflow: hidden;
     min-height: 400px;
@@ -22,13 +26,14 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background-image: 
-        radial-gradient(circle at 10% 20%, rgba(255, 165, 0, 0.3) 0%, transparent 50%),
-        radial-gradient(circle at 80% 30%, rgba(219, 112, 147, 0.3) 0%, transparent 50%),
-        radial-gradient(circle at 30% 80%, rgba(255, 192, 203, 0.3) 0%, transparent 50%),
-        radial-gradient(circle at 90% 70%, rgba(147, 112, 219, 0.3) 0%, transparent 50%);
+    background-image: url("../assets/flowersbg.jpg");
+    box-shadow: inset 0 0 0 1000px var(--opacity);
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: bottom;
     opacity: 0.4;
     pointer-events: none;
+    transition: box-shadow .3s ease-in-out;
 }
 
 .hero-content {
@@ -39,8 +44,8 @@
 }
 
 .hero-title {
-    font-size: 3.5rem;
-    font-weight: 300;
+    font-size: 4rem;
+    font-weight: 400;
     color: #ffffff;
     margin-bottom: 2.5rem;
     font-style: italic;
@@ -70,15 +75,16 @@
 
 .content-text h2 {
     font-size: 1.875rem;
-    font-weight: 300;
-    color: #b45309;
+    font-weight: 500;
+    color: #bda777;
     margin-bottom: 1rem;
 }
 
 .content-text p {
-    color: #4b5563;
+    color: var(--primary-text);
     margin-bottom: 1.5rem;
     line-height: 1.6;
+    transition: color .3s ease-in-out;
 }
 
 .content-image {

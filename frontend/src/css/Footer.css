@@ -1,5 +1,5 @@
 .footer {
-    background-color: #ffffff;
+    background-color: var(--bg-color);
     border-top: 1px solid #e5e7eb;
     padding: 2rem;
     margin-top: auto;
@@ -28,7 +28,7 @@
 }
 
 .footer-name {
-    color: #374151;
+    color: #ec4899;
     font-weight: 400;
     font-size: 1rem;
 }
@@ -60,7 +60,7 @@
     background: none;
     border: none;
     font-size: 1.25rem;
-    color: #9ca3af;
+    color: #ec4899;
     cursor: pointer;
     transition: color 0.3s ease;
     padding: 0.25rem;
