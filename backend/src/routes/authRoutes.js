@@ -73,6 +73,7 @@ router.post('/register', async (req, res) => {
         const token = jwt.sign({id: user.id}, process.env.
         JWT_SECRET, { expiresIn: '24h'})
         return res.status(201).json({token})
+
     } catch (error) {
         console.log(error.message)
         return res.sendStatus(503)
@@ -106,6 +107,36 @@ router.post('/login', async(req, res) => {
     }
 })
 
+
+// Employees can create a registration token for new patients to be registered.
+// This token will be used in the registration page alongside a username and password for creating an account.
+
+router.post('/createRegistrationCode', async(req, res) => {
+
+    try{
+
+        //Optionally, add date of birth as a requirement
+        const { name } = req.body;
+
+        const token = crypto.randomBytes(20).toString("hex");
+        const registrationToken = crypto.createHash("sha256").update(token).digest("hex");
+
+        const createUser = await prisma.user.create({
+            data: {
+                fullName: name,
+                registerToken: registrationToken,
+                //TODO: Either rework the schema to not require a username and password, and instead require a name and token, OR generate a replacable username and password when creating the registration Token
+                //username:
+            }
+        });
+
+    } catch(err) {
+        console.log(err);
+    }
+
+});
+
+
 //Reset password request
 router.post('/forgotPassword', async(req, res) => {
 
@@ -125,10 +156,27 @@ router.post('/forgotPassword', async(req, res) => {
             {
                 try {
 
+
+                    //TODO: work with Everardo to get this all tested and working with the actual email, going forward
+
+                    //new NodeMailer SMTP transporter, for Privateemail
+                    {/*
+                    const transporter = nodemailer.createTransport({
+                        host: process.env.EMAIL_HOST,
+                        port: 465,
+                        secure: true,
+                        auth: {
+                            user: process.env.EMAIL_USER,
+                            pass: process.env.EMAIL_PASSWORD
+                        }
+                    });
+                */}
+
+
                     const transporter = nodemailer.createTransport({
                         service: "gmail",
                         auth: {
-                            //TODO: Change this to a "business" email, and help set up a google app password, before testing it again.
+
                             user: "jarodmmoore@gmail.com",
                             pass: process.env.GOOGLE_APP_PASSWORD, // The 16-character App Password
                         },
@@ -136,9 +184,9 @@ router.post('/forgotPassword', async(req, res) => {
 
                     const mailOption = {
                         from: process.env.EMAIL_ID,
-            to: option.email,
-            subject: option.subject,
-            html: option.message
+                        to: option.email,
+                        subject: option.subject,
+                        html: option.message
                     };
 
                     await transporter.sendMail(mailOption, (err, info) => {
@@ -149,6 +197,8 @@ router.post('/forgotPassword', async(req, res) => {
                 }
             };
 
+
+            //TODO: Reformat this to match the website's style and layout!
             const mailTemplate = (content, buttonUrl, buttonText) => {
                 return `<!DOCTYPE html>
                 <html>
@@ -247,7 +297,6 @@ router.post("/resetPassword", async(req, res) => {
                 data:  {password: hashedPassword},
             });
         }
-        //TODO: Output that password has been reset
 
         res.redirect(`${process.env.FRONTEND_URL}`);
     } catch (err) {
