@@ -152,58 +152,93 @@ function Calendar(){
             />
             
             {isPopupOpen ? (
-                <div className="modal-overlay">
-                    <div className="modal">
+                <div className="modal-overlay" onClick={()=>{
+                    setIsPopupOpen(false);
+                    resetForm();
+                }}>
+                    <div className="modal-box" onClick={(event) => event.stopPropagation()}>
+                        <button
+                            className="modal-close" onClick={()=>{
+                                setIsPopupOpen(false);
+                                resetForm();
+                            }}
+                        >X</button>
                         <h2>
                             {
                             selectedEvent ? (isEditing ? "Edit Event": "Event Details")
                             : "Create Event"
                             }
                         </h2>
-                        <input 
-                            type="text"
-                            placeholder="Event Title"
-                            value ={title}
-                    
-                            disabled={!isEditing} 
-                            onChange={ (event) => setTitle(event.target.value)}
-                        />
-                        {error ? <p className="error-txt">{error}</p>: null}
-                        <textarea 
-                            disabled={!isEditing}
-                            placeholder="Description..."
-                            value={description}
-                            onChange={(event) => setDescription(event.target.value)}
-                        />
-                        
-                        <div className="modal-btn">
-                            <button
-                            onClick={() => {                        
-                                if (selectedEvent && !isEditing){   //view mode, switch to edit mode
+                        <form
+                            className="modal-form"
+                            onSubmit={(event) => {
+                                event.preventDefault();
+                                if (selectedEvent && !isEditing){
                                     setIsEditing(true);
                                     return;
                                 }
-
-                                saveEvent();        //in create or edit mode, save or update
+                                saveEvent();
                             }}
-                            >
-                                {selectedEvent ? (isEditing ? "Update" : "Edit")
-                                    : "Save"
-                                }
-                            </button>
-                            {selectedEvent && isEditing ? 
-                                <button onClick={deleteEvent}>Delete</button>
-                                : null
-                            }
-                            <button
-                            onClick={() => {
-                                setIsPopupOpen(false)
-                                resetForm()
-                                }}>
-                                Cancel
-                            </button>
-                        </div>
-                        
+                        >
+                            <div className="form-section">
+                                <label htmlFor="event-title">Event Title *</label>
+                                <input 
+                                    id="event-title"
+                                    type="text"
+                                    
+                                    value ={title}
+                    
+                                    disabled={!isEditing && selectedEvent} 
+                                    onChange={ (event) => setTitle(event.target.value)}
+                                    required
+                                    maxLength={100}
+                                />
+                                {error ? <p className="error-txt">{error}</p>: null}
+                            </div>
+
+                            <div className="form-section">
+                                <label htmlFor="event-description">Event Description</label>
+                                <textarea 
+                                    id="event-description"
+                                    rows={5}
+                                    disabled={!isEditing && selectedEvent}
+                                    
+                                    value={description}
+                                    onChange={(event) => setDescription(event.target.value)}
+                                />
+                            </div>
+ 
+                            <div className="calendar-modal-btns">
+                                <button
+                                    type="submit"
+                                    className="hero-btn primary"
+                                >
+                                    {selectedEvent ? (isEditing ? "Update" : "Edit")
+                                        : "Save"
+                                    }
+                                </button>
+
+                                {selectedEvent && isEditing ? (
+                                    <button 
+                                        type="button"
+                                        className="hero-btn secondary"
+                                        onClick={deleteEvent}
+                                    >Delete
+                                    </button>
+                                ): null}
+
+                                <button
+                                    type="button"
+                                    className="hero-btn secondary"
+                                    onClick={() => {
+                                    setIsPopupOpen(false);
+                                    resetForm();
+                                    }}
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        </form>    
                     </div>
                 </div>
             ) : null}

@@ -2,9 +2,22 @@ import "../css/About.css"
 import caregiverImg from "../assets/caregiver.JPG"
 import missionImg from "../assets/mission.jpeg"
 import walkImg from "../assets/walk.jpg"
+import {useState} from "react"
 
 function About(){
-    return <div className="about">
+    const [isModalOpen, setIsModalOpen] = useState(false)
+    const [modalType, setModalType] = useState("")
+
+    function openModal(type){
+        setModalType(type)
+        setIsModalOpen(true)
+    }
+    function closeModal() {
+        setIsModalOpen(false)
+        setModalType("")
+    }
+
+    return (<div className="about">
        
         <div className="hero">
             <div className="hero-content">
@@ -12,8 +25,20 @@ function About(){
                     <h1>About Because We Care</h1>
                 </div>
                 <div className="hero-buttons">
-                    <button className="hero-btn primary">Book a Consultation</button>
-                    <button className="hero-btn primary">Contact Us</button>
+                    <button 
+                        className="hero-btn primary"
+                        onClick={() => {
+                            openModal("consultation")
+                        }}
+                    >Book a Consultation</button>
+
+                    <button 
+                        className="hero-btn primary"
+                        onClick={() => {
+                            openModal("contact")
+                        }}
+                    >Contact Us</button>
+
                 </div>
             </div>
         </div>
@@ -69,7 +94,50 @@ function About(){
                 <img src={walkImg} alt="Staff walking at alzheimers fundraiser walk"/>
             </div>
         </section>
+        {isModalOpen ? (
+            <div className="modal-overlay" onClick={closeModal}>
+                <div className="modal-box" onClick={ (event) => event.stopPropagation()}>
+                    <button className="modal-close" onClick={closeModal}>X</button>
+
+                    <h2>
+                        {modalType === "consultation" ? "Book a Consultation" : "Contact Us"}
+                    </h2>
+                    <form className="modal-form">
+                        <div className="form-section">
+                            <label htmlFor="name">Full Name *</label>
+                            <input id="name" type="text" required maxLength={100}/>
+                        </div>
+                        
+                        <div className="form-section">
+                            <label htmlFor="email">Email *</label>
+                            <input id="email" type="email" required maxLength={254}/>
+                        </div>
+                        
+                        <div className="form-section">
+                            <label htmlFor="phone">Phone Number</label>
+                            <input id="phone" type="tel"/>
+                        </div>
+
+                        {modalType==="consultation" ?(
+                            <div className="form-section">
+                            <label htmlFor="hours">Hours Required (Per Week)</label>
+                            <input id="hours" type="text"/>
+                            </div>
+                            ) : null}
+                        <div className="form-section">
+                            <label htmlFor="message">
+                                {modalType === "consultation" ? "Describe The Care Required *": "Questions/Comments"}
+                            </label>
+                            <textarea id="message" rows="5" required={modalType === "consultation"}></textarea>
+                        </div>
+                        <button type="submit" className="hero-btn primary">Submit</button>
+                    </form>
+                </div>
+            </div>
+        ) : null }
+
     </div>
+    )
 }
 
 export default About;
