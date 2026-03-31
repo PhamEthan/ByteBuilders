@@ -19,7 +19,7 @@ const CAREGIVER_CALENDAR_ID = 'primary'
 router.get('/login', (req, res) => {
   const url = oauth2Client.generateAuthUrl({
     access_type: 'offline',
-    scope: ['https://www.googleapis.com/auth/calendar']
+    scope: ['https://www.googleapis.com/auth/calendar https://mail.google.com/']
   })
   res.redirect(url)
 })
