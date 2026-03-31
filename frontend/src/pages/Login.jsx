@@ -3,7 +3,6 @@ import { useForm } from "react-hook-form"
 import {yupResolver} from '@hookform/resolvers/yup'
 import * as yup from 'yup'
 import { useState } from "react"
-import { register as registerUser } from "../api/auth"
 
 
 
@@ -68,7 +67,7 @@ function Login(){
 
         reset()
     };
-*/
+
     return (
         <div className="login">
             <h1>{isLogin ? "Welcome Back!" : "Welcome!"}</h1>
@@ -202,7 +201,7 @@ async function authenticate(emailVal, passVal, isLogin) {
         let res
         if (!isLogin) {
             // register
-            res = await fetch(apiBase + 'auth/consultForm', {
+            res = await fetch(apiBase + 'auth/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username: emailVal, password: passVal })

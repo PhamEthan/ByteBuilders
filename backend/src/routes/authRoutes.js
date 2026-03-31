@@ -14,20 +14,6 @@ require("dotenv").config();
 
 let authToken;
 
-const oauth2Client = new google.auth.OAuth2(
-    process.env.CLIENT_ID,
-    process.env.SECRET_ID,
-    process.env.REDIRECT
-)
-
-router.get('/login', (req, res) => {
-    const url = oauth2Client.generateAuthUrl({
-        access_type: 'offline',
-        scope: ['https://www.googleapis.com/auth/calendar']
-    })
-    res.redirect(url)
-})
-
 // /appointments/redirect
 router.get('/redirect', async (req, res) => {
     const code = req.query.code

@@ -18,30 +18,24 @@ function App() {
   const [isDark, setDark] = useState(false);
 
   return (
-    <div className="app-container" data-theme={isDark ? "dark" : "light"}> 
-      <NavBar isChecked={isDark} handleChange={() => setDark(!isDark)} />
-      <main className ="main">
-        {/* Routes WITH Navbar + Footer */}
-        <Route element={<Main isDark={isDark} setDark={setDark} />}>
-        <Route path="/" element={<Home />} />
-        <Route path="/about" element={<About />} />
-        <Route path="/calendar" element={<Calendar />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/fileviewer" element={<FileViewer />} />
-        <Route path="/resetPassword" element={<ResetPassword />}/>
-      </Route>
-      </main>
-      <Footer />
-    </div>
     <Routes>
-      
-      
+
+      {/* Routes WITH Navbar + Footer */}
+      <Route element={<Main isDark={isDark} setDark={setDark} />}>
+      <Route path="/" element={<Home />} />
+      <Route path="/about" element={<About />} />
+      <Route path="/calendar" element={<Calendar />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/fileviewer" element={<FileViewer />} />
+      <Route path="/resetPassword" element={<ResetPassword />}/>
+      </Route>
 
       {/* Employee Route WITHOUT Navbar + Footer */}
-        <Route path="/employee" element={<Employee />} />
-        <Route path="/checkin" element={<Checkin />} />
-        <Route path="/schedule" element={<Schedule />} />
-        <Route path="/notes" element={<Notes />} />
+      <Route path="/employee" element={<Employee />} />
+      <Route path="/checkin" element={<Checkin />} />
+      <Route path="/schedule" element={<Schedule />} />
+      <Route path="/notes" element={<Notes />} />
+
     </Routes>
   );
 }
