@@ -4,12 +4,12 @@
 ## Building & running the frontend
 To Build, run the following, inside the frontend directory:
 <pre>
-    npm install
+npm install
 </pre>
 
 To Run the frontned
 <pre>
-    npm start
+npm start
 </pre>
 
 ## Building & running the backend database and docker
