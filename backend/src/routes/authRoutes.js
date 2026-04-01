@@ -464,104 +464,104 @@ router.post("/contactForm", async(req, res) => {
 
 
         //TODO: Reformat this to match the website's style and layout!
-const businessTemplate = (Name, Email, Phone, Message) => {
-    return `<!DOCTYPE html>
-    <html>
-        <body style="
-            margin: 0;
-            padding: 24px;
-            font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-            background: linear-gradient(to bottom, #f8daa3, #e8e1e7f7);
-        ">
-            <div style="
-                max-width: 600px;
-                margin: 0 auto;
-                background-color: #fafafa;
-                padding: 32px;
-                border-radius: 10px;
-            ">
-                <h1 style="
-                    text-align: center;
-                    font-size: 1.2rem;
-                    color: #ec4899;
-                    margin-top: 0;
-                    margin-bottom: 24px;
+    const businessTemplate = (Name, Email, Phone, Message) => {
+            return `<!DOCTYPE html>
+            <html>
+                <body style="
+                    margin: 0;
+                    padding: 24px;
+                    font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+                    background: linear-gradient(to bottom, #f8daa3, #e8e1e7f7);
                 ">
-                    Contact Us Form Submission
-                </h1>
+                    <div style="
+                        max-width: 600px;
+                        margin: 0 auto;
+                        background-color: #fafafa;
+                        padding: 32px;
+                        border-radius: 10px;
+                    ">
+                        <h1 style="
+                            text-align: center;
+                            font-size: 1.2rem;
+                            color: #ec4899;
+                            margin-top: 0;
+                            margin-bottom: 24px;
+                        ">
+                            Contact Us Form Submission
+                        </h1>
 
-                <p style="text-align: left; font-size: 0.9rem; color: #000; margin: 0 0 12px 0;">
-                    <strong>Name:</strong> ${Name}
-                </p>
+                        <p style="text-align: left; font-size: 0.9rem; color: #000; margin: 0 0 12px 0;">
+                            <strong>Name:</strong> ${Name}
+                        </p>
 
-                <p style="text-align: left; font-size: 0.9rem; color: #000; margin: 0 0 12px 0;">
-                    <strong>Email:</strong> ${Email}
-                </p>
+                        <p style="text-align: left; font-size: 0.9rem; color: #000; margin: 0 0 12px 0;">
+                            <strong>Email:</strong> ${Email}
+                        </p>
 
-                <p style="text-align: left; font-size: 0.9rem; color: #000; margin: 0 0 16px 0;">
-                    <strong>Phone:</strong> ${Phone || "Not Provided"}
-                </p>
+                        <p style="text-align: left; font-size: 0.9rem; color: #000; margin: 0 0 16px 0;">
+                            <strong>Phone:</strong> ${Phone || "Not Provided"}
+                        </p>
 
-                <p style="text-align: left; font-size: 0.9rem; color: #000; margin: 0 0 8px 0;">
-                    <strong>Message:</strong>
-                </p>
+                        <p style="text-align: left; font-size: 0.9rem; color: #000; margin: 0 0 8px 0;">
+                            <strong>Message:</strong>
+                        </p>
 
-                <div style="
-                    background-color: rgba(252, 93, 172, 0.1);
-                    padding: 14px;
-                    border-radius: 8px;
-                ">
-                    <p style="
-                        text-align: left;
-                        font-size: 0.9rem;
-                        color: #000;
-                        margin: 0;
-                        white-space: pre-wrap;
-                    ">${Message}
-                    </p>
-                </div>
-            </div>
-        </body>
-    </html>`;
-};      //CHANGED LINE 492 TI PHONE
+                        <div style="
+                            background-color: rgba(252, 93, 172, 0.1);
+                            padding: 14px;
+                            border-radius: 8px;
+                        ">
+                            <p style="
+                                text-align: left;
+                                font-size: 0.9rem;
+                                color: #000;
+                                margin: 0;
+                                white-space: pre-wrap;
+                            ">${Message}
+                            </p>
+                        </div>
+                    </div>
+                </body>
+            </html>`;
+        };      //CHANGED LINE 492 TI PHONE
 
         const userTemplate = (Name) => {
-    return `<!DOCTYPE html>
-    <html>
-        <body style="
-            margin: 0;
-            padding: 24px;
-            font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-            background: linear-gradient(to bottom, #f8daa3, #e8e1e7f7);
-        ">
-            <div style="
-                max-width: 600px;
-                margin: 0 auto;
-                background-color: #fafafa;
-                padding: 32px;
-                border-radius: 10px;
-            ">
-                <h1 style="
-                    text-align: center;
-                    font-size: 1.2rem;
-                    color: #ec4899;
-                    margin-top: 0;
-                    margin-bottom: 24px;
+            return `<!DOCTYPE html>
+            <html>
+                <body style="
+                    margin: 0;
+                    padding: 24px;
+                    font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+                    background: linear-gradient(to bottom, #f8daa3, #e8e1e7f7);
                 ">
-                    We received your message
-                </h1>
+                    <div style="
+                        max-width: 600px;
+                        margin: 0 auto;
+                        background-color: #fafafa;
+                        padding: 32px;
+                        border-radius: 10px;
+                    ">
+                        <h1 style="
+                            text-align: center;
+                            font-size: 1.2rem;
+                            color: #ec4899;
+                            margin-top: 0;
+                            margin-bottom: 24px;
+                        ">
+                            We received your message
+                        </h1>
 
-                <p style="text-align: left; font-size: 0.9rem; color: #000; margin: 0 0 12px 0;">
-                    Hello ${Name},
-                </p>
+                        <p style="text-align: left; font-size: 0.9rem; color: #000; margin: 0 0 12px 0;">
+                            Hello ${Name},
+                        </p>
 
-                <p style="text-align: left; font-size: 0.9rem; color: #000; margin: 0;">
-                    Thank you for contacting Because We Care. We received your message and will get back to you soon.
-                </p>
-            </div>
-        </body>
-    </html>`;
-};
+                        <p style="text-align: left; font-size: 0.9rem; color: #000; margin: 0;">
+                            Thank you for contacting Because We Care. We received your message and will get back to you soon.
+                        </p>
+                    </div>
+                </body>
+            </html>`;
+        };
 
 
         const businessMailOption = {
@@ -647,110 +647,110 @@ router.post("/consultForm", async(req, res) => {
 
         //TODO: Reformat this to match the website's style and layout!
        const mailTemplate = (Name, Email, Phone, Location, Hours, Message) => {
-    return `<!DOCTYPE html>
-    <html>
-        <body style="
-            margin: 0;
-            padding: 24px;
-            font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-            background: linear-gradient(to bottom, #f8daa3, #e8e1e7f7);
-        ">
-            <div style="
-                max-width: 600px;
-                margin: 0 auto;
-                background-color: #fafafa;
-                padding: 32px;
-                border-radius: 10px;
-            ">
-                <h1 style="
-                    text-align: center;
-                    font-size: 1.2rem;
-                    color: #ec4899;
-                    margin-top: 0;
-                    margin-bottom: 24px;
+            return `<!DOCTYPE html>
+            <html>
+                <body style="
+                    margin: 0;
+                    padding: 24px;
+                    font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+                    background: linear-gradient(to bottom, #f8daa3, #e8e1e7f7);
                 ">
-                    Consultation Request
-                </h1>
+                    <div style="
+                        max-width: 600px;
+                        margin: 0 auto;
+                        background-color: #fafafa;
+                        padding: 32px;
+                        border-radius: 10px;
+                    ">
+                        <h1 style="
+                            text-align: center;
+                            font-size: 1.2rem;
+                            color: #ec4899;
+                            margin-top: 0;
+                            margin-bottom: 24px;
+                        ">
+                            Consultation Request
+                        </h1>
 
-                <p style="text-align: left; font-size: 0.9rem; color: #000; margin: 0 0 12px 0;">
-                    <strong>Name:</strong> ${Name}
-                </p>
+                        <p style="text-align: left; font-size: 0.9rem; color: #000; margin: 0 0 12px 0;">
+                            <strong>Name:</strong> ${Name}
+                        </p>
 
-                <p style="text-align: left; font-size: 0.9rem; color: #000; margin: 0 0 12px 0;">
-                    <strong>Email:</strong> ${Email}
-                </p>
+                        <p style="text-align: left; font-size: 0.9rem; color: #000; margin: 0 0 12px 0;">
+                            <strong>Email:</strong> ${Email}
+                        </p>
 
-                <p style="text-align: left; font-size: 0.9rem; color: #000; margin: 0 0 12px 0;">
-                    <strong>Phone:</strong> ${Phone || "Not Provided"}
-                </p>
+                        <p style="text-align: left; font-size: 0.9rem; color: #000; margin: 0 0 12px 0;">
+                            <strong>Phone:</strong> ${Phone || "Not Provided"}
+                        </p>
 
-                <p style="text-align: left; font-size: 0.9rem; color: #000; margin: 0 0 12px 0;">
-                    <strong>Location:</strong> ${Location || "Not Provided"}
-                </p>
+                        <p style="text-align: left; font-size: 0.9rem; color: #000; margin: 0 0 12px 0;">
+                            <strong>Location:</strong> ${Location || "Not Provided"}
+                        </p>
 
-                <p style="text-align: left; font-size: 0.9rem; color: #000; margin: 0 0 16px 0;">
-                    <strong>Hours per week:</strong> ${Hours || "Not Provided"}
-                </p>
+                        <p style="text-align: left; font-size: 0.9rem; color: #000; margin: 0 0 16px 0;">
+                            <strong>Hours per week:</strong> ${Hours || "Not Provided"}
+                        </p>
 
-                <p style="text-align: left; font-size: 0.9rem; color: #000; margin: 0 0 8px 0;">
-                    <strong>Care Required:</strong>
-                </p>
+                        <p style="text-align: left; font-size: 0.9rem; color: #000; margin: 0 0 8px 0;">
+                            <strong>Care Required:</strong>
+                        </p>
 
-                <div style="
-                    background-color: rgba(252, 93, 172, 0.1);
-                    padding: 14px;
-                    border-radius: 8px;
-                ">
-                    <p style="
-                        text-align: left;
-                        font-size: 0.9rem;
-                        color: #000;
-                        margin: 0;
-                        white-space: pre-wrap;
-                    ">${Message}
-                    </p>
-                </div>
-            </div>
-        </body>
-    </html>`;
-};
+                        <div style="
+                            background-color: rgba(252, 93, 172, 0.1);
+                            padding: 14px;
+                            border-radius: 8px;
+                        ">
+                            <p style="
+                                text-align: left;
+                                font-size: 0.9rem;
+                                color: #000;
+                                margin: 0;
+                                white-space: pre-wrap;
+                            ">${Message}
+                            </p>
+                        </div>
+                    </div>
+                </body>
+            </html>`;
+        };
         const userTemplate = (Name) => {
-    return `<!DOCTYPE html>
-    <html>
-        <body style="
-            margin: 0;
-            padding: 24px;
-            font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-            background: linear-gradient(to bottom, #f8daa3, #e8e1e7f7);
-        ">
-            <div style="
-                max-width: 600px;
-                margin: 0 auto;
-                background-color: #fafafa;
-                padding: 32px;
-                border-radius: 10px;
-            ">
-                <h1 style="
-                    text-align: center;
-                    font-size: 1.2rem;
-                    color: #ec4899;
-                    margin-top: 0;
-                    margin-bottom: 24px;
+            return `<!DOCTYPE html>
+            <html>
+                <body style="
+                    margin: 0;
+                    padding: 24px;
+                    font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+                    background: linear-gradient(to bottom, #f8daa3, #e8e1e7f7);
                 ">
-                    We received your consultation request
-                </h1>
+                    <div style="
+                        max-width: 600px;
+                        margin: 0 auto;
+                        background-color: #fafafa;
+                        padding: 32px;
+                        border-radius: 10px;
+                    ">
+                        <h1 style="
+                            text-align: center;
+                            font-size: 1.2rem;
+                            color: #ec4899;
+                            margin-top: 0;
+                            margin-bottom: 24px;
+                        ">
+                            We received your consultation request
+                        </h1>
 
-                <p style="text-align: left; font-size: 0.9rem; color: #000; margin: 0 0 12px 0;">
-                    Hello ${Name},
-                </p>
+                        <p style="text-align: left; font-size: 0.9rem; color: #000; margin: 0 0 12px 0;">
+                            Hello ${Name},
+                        </p>
 
-                <p style="text-align: left; font-size: 0.9rem; color: #000; margin: 0;">
-                    Thank you for reaching out to Because We Care. We received your consultation request and will get back to you soon.
-                </p>
-            </div>
-        </body>
-    </html>`;
-};
+                        <p style="text-align: left; font-size: 0.9rem; color: #000; margin: 0;">
+                            Thank you for reaching out to Because We Care. We received your consultation request and will get back to you soon.
+                        </p>
+                    </div>
+                </body>
+            </html>`;
+        };
 
         const businessMailOption = {
             email: process.env.EMAIL_USER,
