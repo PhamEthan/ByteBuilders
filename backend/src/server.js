@@ -10,6 +10,7 @@ import cors from "cors";
 //  without flagging CORS communication issues in the web browser
 const corsOptions = {
     origin: ["http://localhost:3000"],
+    credentials: true,
 };
 
 

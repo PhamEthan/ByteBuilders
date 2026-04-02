@@ -8,11 +8,18 @@ import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
 const router = express.Router()
 
+//import cookieParser from 'cookie-parser';
+
 import { createRequire } from "module";
 const require = createRequire(import.meta.url);
 require("dotenv").config();
 
 let authToken;
+
+router.get('/cookie', function(req, res) {
+    res.cookie('jwt', 'asdf');
+    res.send("Cookie set");
+})
 
 // /appointments/redirect
 router.get('/redirect', async (req, res) => {
@@ -36,7 +43,6 @@ router.get('/redirect', async (req, res) => {
 })
 
 
-
 //Register new user
 router.post('/register', async (req, res) => {
     const { username, password } = req.body
@@ -47,7 +53,6 @@ router.post('/register', async (req, res) => {
     const tempPassword = crypto.randomBytes(5).toString("hex");
     //encrypt password
     const hashedPassword = bcrypt.hashSync(tempPassword, 8)
-
 
     const regtoken = crypto.randomBytes(20).toString("hex");
     const registrationToken = crypto.createHash("sha256").update(regtoken).digest("hex");
@@ -232,6 +237,7 @@ router.post('/register', async (req, res) => {
 */
 
 
+
 router.post('/login', async(req, res) => {
     // retrieve email, and search for their password
     // but pass is encrypted so we re encrypte the entered password and search for the encrypted password in our database
@@ -252,6 +258,11 @@ router.post('/login', async(req, res) => {
 
         // All Checks Passed
         const token = jwt.sign({ id: user.id}, process.env.JWT_SECRET, {expiresIn: '24h'})
+        res.cookie('authcookie', token, {
+            httpOnly: true,
+            secure: true,
+            SameSite: "None",
+        });
         res.json({token})
     } catch (err) {
         console.log(err.message)

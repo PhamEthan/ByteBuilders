@@ -5,12 +5,6 @@ import * as yup from 'yup'
 import { useState } from "react"
 
 
-
-//TODO: Clean up and reformat Forgot Password and user registration email HTML formatting
-//      Fix the button on the emails
-
-//TODO: Create 2FA email and logic
-
 // ===== GLOBAL STATE =====
 let token = localStorage.getItem('token') || null
 let isAuthenticating = false
@@ -56,7 +50,11 @@ function Login(){
         //calls to authenticate, to speak to the authentication middleware, to check against current entries in the database.
         if(!resetPassword)
         {
-            authenticate(data.email, data.password, isLogin)
+            let res = authenticate(data.email, data.password, isLogin);
+            if(res.ok)
+            {
+
+            }
         }
         else
         {
@@ -185,6 +183,8 @@ async function forgotPassword(emailVal)
 
 }
 
+
+
 async function authenticate(emailVal, passVal, isLogin) {
 
     //TODO: Make sure that passVal.length is consistent with the password length for the input box on the frontend
@@ -209,6 +209,7 @@ async function authenticate(emailVal, passVal, isLogin) {
         } else {
             // login
             res = await fetch(apiBase + 'auth/login', {
+                credentials: 'include',
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username: emailVal, password: passVal })
@@ -222,6 +223,7 @@ async function authenticate(emailVal, passVal, isLogin) {
         }
 
         token = data.token
+
         localStorage.setItem('token', token)
 
 
