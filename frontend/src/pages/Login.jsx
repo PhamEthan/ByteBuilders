@@ -222,9 +222,7 @@ async function authenticate(emailVal, passVal, isLogin) {
             throw new Error(data.message || 'Failed to authenticate.')
         }
 
-        token = data.token
 
-        localStorage.setItem('token', token)
 
 
         //TODO: Add things here to output errors to the frontend, for users to see, instead of only showing it in the browser's console

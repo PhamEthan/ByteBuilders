@@ -8,40 +8,14 @@ import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
 const router = express.Router()
 
-//import cookieParser from 'cookie-parser';
+import cookieParser from 'cookie-parser';
+router.use(cookieParser())
 
 import { createRequire } from "module";
 const require = createRequire(import.meta.url);
 require("dotenv").config();
 
 let authToken;
-
-router.get('/cookie', function(req, res) {
-    res.cookie('jwt', 'asdf');
-    res.send("Cookie set");
-})
-
-// /appointments/redirect
-router.get('/redirect', async (req, res) => {
-    const code = req.query.code
-
-    if (!code) {
-        return res.status(400).send('No ?code provided from Google')
-    }
-
-    try {
-        const { tokens } = await oauth2Client.getToken(code)
-        oauth2Client.setCredentials(tokens)
-        authtoken = tokens
-        tokensSet = true
-        console.log('Google Calendar OAuth tokens set.')
-        res.redirect('/')
-    } catch (err) {
-        console.error('Error exchanging code for token:', err)
-        res.status(500).send('Failed to authorize Google Calendar.')
-    }
-})
-
 
 //Register new user
 router.post('/register', async (req, res) => {
@@ -202,6 +176,68 @@ router.post('/register', async (req, res) => {
     }
 })
 
+router.get('/getEvents', async(req,res) => {
+    //Cookie authentication code:
+    const cookieToken = req.cookies.authcookie;
+    if(!cookieToken) console.log("invalid cookie");
+
+    let userID;
+    jwt.verify(cookieToken, process.env.JWT_SECRET, (err, user) => {
+        if(err) return console.log("Error or invalid cookie");
+       // req.user = user;
+        console.log("Authenticated with cookie as user: ", user);
+        res.status(200).json({user});
+        userID = user.id;
+    });
+
+    const user = await prisma.user.findUnique({
+        where: {
+            id: userID,
+        }
+    })
+
+    if (!user) {
+        return res.sendStatus(404).send({ message: "User not Found"});
+    }
+    else {
+        //Find all calendar events from the user
+        let events = new Object();
+        console.log(user.calEvents);
+
+        //send list of calendar events back
+
+
+    }
+
+
+});
+
+router.post('/addEventUsers', async(req, res) => {
+
+    //Save the array of userIDs
+    //const { userIDs, eventID } = req.body;
+
+    //Testing Data
+    let userIDs = [25, 26];
+    let eventID = 123456;
+
+
+    try {
+
+        //Correctly adds the eventID to the users' database entry
+        const updateUsers = await prisma.user.updateMany({
+            where: {
+                id: {in: userIDs }
+            },
+            data: { calEvents: {push: String(eventID)} },
+        });
+
+    } catch(err) {
+        console.log(err);
+    }
+
+
+})
 
 
 
@@ -244,7 +280,12 @@ router.post('/login', async(req, res) => {
 
     const {username, password} = req.body
 
+
+
+
+
     try {
+        console.log("attempting user login")
        const user = await prisma.user.findUnique({
             where: {
                 username: username
@@ -269,6 +310,7 @@ router.post('/login', async(req, res) => {
         res.sendStatus(503)
     }
 })
+
 
 
 //Reset password request
@@ -535,8 +577,6 @@ router.post("/contactForm", async(req, res) => {
 })
 
 
-
-//TODO:
 
 router.post("/consultForm", async(req, res) => {
 

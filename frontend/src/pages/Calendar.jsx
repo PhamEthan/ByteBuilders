@@ -5,6 +5,11 @@ import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import { useState } from "react";
 
+
+const apiBase = 'http://localhost:5003/'
+
+let isAuth;
+
 function Calendar(){
 
     const [events, setEvents] = useState([]);
@@ -15,7 +20,6 @@ function Calendar(){
     const [selectedEvent, setSelectedEvent] = useState(null);
     const [isEditing, setIsEditing] = useState(false);
     const [error, setError] = useState("");
-
     const clickDate = (info) => {
         console.log("date clicked", info.dateStr);
         SetselectedDate(info.dateStr);
@@ -65,6 +69,16 @@ function Calendar(){
             
             
             })
+
+            //Send request to appointmentRoutes to create
+
+
+
+
+
+
+
+
         }
 
         else{
@@ -85,11 +99,12 @@ function Calendar(){
             }
             ]);
         }
-
         
         resetForm();
         setIsPopupOpen(false);
     };
+
+
 
     const deleteEvent = () => {
         if (!selectedEvent){return};
@@ -97,7 +112,7 @@ function Calendar(){
         setEvents((prevEvents) => {
             return prevEvents.filter(event => {
                 return event.id !== selectedEvent.id    // if true (not slected event) dont delete, if false delete (match)
-            
+
             }); 
         });
 
@@ -127,7 +142,12 @@ function Calendar(){
         SetselectedDate(null);
     }
 
+    authenticate();
+
     return (
+
+        //Testing code for JWT
+
         <div className="calendar-container">
             <FullCalendar
             plugins={[dayGridPlugin,timeGridPlugin,interactionPlugin]}
@@ -150,6 +170,7 @@ function Calendar(){
                 meridiem:'short'
             }}  
             />
+
             
             {isPopupOpen ? (
                 <div className="modal-overlay">
@@ -212,4 +233,90 @@ function Calendar(){
         
     )
 }
+
+
+
+function setIsAuth(value)
+{
+    isAuth = value;
+}
+
+
+
+async function authenticate() {
+   let res = await fetch(apiBase + 'auth/getEvents', {
+        credentials: 'include',
+        method: 'GET',
+        header: { 'Content-Type' : 'application/json'},
+    });
+    if(res.ok)
+    {
+
+        //Returns the authenticated cookie data as debug data.
+        console.log("Logged in as: ", res.json());
+        console.log("getting calendar events...");
+        setIsAuth(true);
+
+
+        //From here, we can request the calendar event IDs, for display
+
+
+
+
+    }
+}
+
+
+async function requestAddEvent(employeeID, userID, date, title, description, location)
+{
+
+
+    //TODO: Add an update/delete function for the events, using the associated frontend functions
+    //TODO: Link and test this with the google calendar API.
+    //TODO: Test using actual user Accounts.
+
+    try {
+        let res = await fetch('/appointments/book/:eventId', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({employee: employeeID, client: userID, date: date, title: title, description: description, location: location})
+        });
+        const data = await res.json().catch(() => ({}))
+        if(res.ok)
+        {
+            let eventID; //= res.body.eventID;
+            //get the returned eventID, and make a request to add it to the emmployee and user DB entries.
+
+            let userIDs = [employeeID, userID];
+            let res2 = await fetch(apiBase + 'auth/addEventUsers', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userIDs: userIDs, eventID: eventID })
+            });
+            const data = await res.json().catch(() => ({}))
+            if(res.ok)
+            {
+
+            }
+            else
+            {
+                throw new Error(data.message || 'Failed to add eventID to the given users');
+            }
+
+        }
+        else
+        {
+            throw new Error(data.message || 'Failed to add the event to google calendar');
+        }
+
+
+    } catch (err) {
+        console.log(err);
+    }
+
+
+}
+
+
+
 export default Calendar;

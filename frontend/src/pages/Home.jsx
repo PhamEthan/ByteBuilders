@@ -3,7 +3,6 @@ import "../css/Home.css"
 function Home(){
     return (
     <div className="home">
-
       <div className="hero">
         <div className="hero-content">
           <h1 className="hero-title">Quality Care is Our Priority</h1>

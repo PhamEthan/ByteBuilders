@@ -14,14 +14,14 @@ model User {
   username     String   @unique
   password     String
 
+  role         UserRole @default(PATIENT)
+  verified     Boolean    //User email verification bool. Updates to true after user has reset their temporary password.
   fullName     String?    // optional for now
   dateOfBirth  DateTime?  // optional for now
-  resetToken   String?     // optional for user password reset
+  calEvents    String[]   //Stores calendar event IDs associated with the user account.
+
+  resetToken   String?    // optional for user password reset
   registerToken String?   //temporary, for initial registration
-  verified      Boolean      //User email verification bool. Updates to true after user has reset their temporary password.
-
-  role         UserRole @default(PATIENT)
-
 
   appointments Appointment[]
 }
