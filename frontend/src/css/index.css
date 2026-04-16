@@ -26,7 +26,16 @@
   --calendar-event-text: #ffffff;
   --calendar-event-border: #ec4899;
   
-
+  --hero-pink: rgba(236, 72, 153, 0.20);
+  --hero-gold: rgba(254, 243, 199, 0.58);
+  --hero-white-top: rgba(255, 255, 255, 0.10);
+  --hero-white-bottom: rgba(255, 255, 255, 0.22);
+  --hero-overlay-shadow: rgba(255, 248, 238, 0.12);
+  --hero-title-color: var(--primary-text);
+  --hero-btn-primary-bg: #ec4899;
+  --hero-btn-primary-hover: #db2777;
+  --hero-btn-secondary-bg: rgba(255, 255, 255, 0.92);
+  --hero-btn-secondary-text: #374151;
 }
 
 * {
