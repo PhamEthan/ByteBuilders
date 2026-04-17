@@ -472,7 +472,7 @@ router.post('/forgotPassword', async(req, res) => {
 router.post("/contactForm", async(req, res) => {
 
 
-    const{nameIn, emailIn, subjectIn, messageIn} = req.body
+    const{nameIn, emailIn, phoneIn, messageIn} = req.body //CHANGED SUBJECTIN TO PHONEIN
 
 
     /*
@@ -508,63 +508,134 @@ router.post("/contactForm", async(req, res) => {
                     html: option.message
                 };
 
-                await transporter.sendMail(mailOption, (err, info) => {
-                    if(err) console.log(err);
-                });
+                await transporter.sendMail(mailOption);
             } catch(err) {
                 console.log(err);
+                throw err;
             }
         };
 
 
         //TODO: Reformat this to match the website's style and layout!
-        const mailTemplate = (Name, Email, Subject, Message) => {
+    const businessTemplate = (Name, Email, Phone, Message) => {
             return `<!DOCTYPE html>
             <html>
-            <body style="text-align: center; font-family: 'Verdana', serif; color: #000;">
-            <div
-            style="
-            max-width: 400px;
-            margin: 10px;
-            background-color: #fafafa;
-            padding: 25px;
-            border-radius: 20px;
-            "
-            >
-            <h3 style="text-align: left;">
-            Recieved a 'Contact Us' request:
-            </h3>
+                <body style="
+                    margin: 0;
+                    padding: 24px;
+                    font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+                    background: linear-gradient(to bottom, #f8daa3, #e8e1e7f7);
+                ">
+                    <div style="
+                        max-width: 600px;
+                        margin: 0 auto;
+                        background-color: #fafafa;
+                        padding: 32px;
+                        border-radius: 10px;
+                    ">
+                        <h1 style="
+                            text-align: center;
+                            font-size: 1.2rem;
+                            color: #ec4899;
+                            margin-top: 0;
+                            margin-bottom: 24px;
+                        ">
+                            Contact Us Form Submission
+                        </h1>
 
-            <p style="text-align: left;">
-            Name: ${Name}
-            </p>
-            <p style="text-align: left;">
-            Email: ${Email}
-            </p>
-            <p style="text-align: left;">
-            Subject: ${Subject}
-            </p>
-            <p style="text-align: left;">
-            Message: ${Message}
-            </p>
-            </div>
-            </body>
+                        <p style="text-align: left; font-size: 0.9rem; color: #000; margin: 0 0 12px 0;">
+                            <strong>Name:</strong> ${Name}
+                        </p>
+
+                        <p style="text-align: left; font-size: 0.9rem; color: #000; margin: 0 0 12px 0;">
+                            <strong>Email:</strong> ${Email}
+                        </p>
+
+                        <p style="text-align: left; font-size: 0.9rem; color: #000; margin: 0 0 16px 0;">
+                            <strong>Phone:</strong> ${Phone || "Not Provided"}
+                        </p>
+
+                        <p style="text-align: left; font-size: 0.9rem; color: #000; margin: 0 0 8px 0;">
+                            <strong>Message:</strong>
+                        </p>
+
+                        <div style="
+                            background-color: rgba(252, 93, 172, 0.1);
+                            padding: 14px;
+                            border-radius: 8px;
+                        ">
+                            <p style="
+                                text-align: left;
+                                font-size: 0.9rem;
+                                color: #000;
+                                margin: 0;
+                                white-space: pre-wrap;
+                            ">${Message}
+                            </p>
+                        </div>
+                    </div>
+                </body>
             </html>`;
+        };      //CHANGED LINE 492 TI PHONE
 
+        const userTemplate = (Name) => {
+            return `<!DOCTYPE html>
+            <html>
+                <body style="
+                    margin: 0;
+                    padding: 24px;
+                    font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+                    background: linear-gradient(to bottom, #f8daa3, #e8e1e7f7);
+                ">
+                    <div style="
+                        max-width: 600px;
+                        margin: 0 auto;
+                        background-color: #fafafa;
+                        padding: 32px;
+                        border-radius: 10px;
+                    ">
+                        <h1 style="
+                            text-align: center;
+                            font-size: 1.2rem;
+                            color: #ec4899;
+                            margin-top: 0;
+                            margin-bottom: 24px;
+                        ">
+                            We received your message
+                        </h1>
+
+                        <p style="text-align: left; font-size: 0.9rem; color: #000; margin: 0 0 12px 0;">
+                            Hello ${Name},
+                        </p>
+
+                        <p style="text-align: left; font-size: 0.9rem; color: #000; margin: 0;">
+                            Thank you for contacting Because We Care. We received your message and will get back to you soon.
+                        </p>
+                    </div>
+                </body>
+            </html>`;
         };
 
-        const mailOption = {
-            email: username,
-            subject: `Contact Us - ${subjectIn}`,
-            message: mailTemplate(
+
+        const businessMailOption = {
+            email: process.env.EMAIL_USER,
+            subject: `Contact Us Form Submission`,
+            message: businessTemplate(
                 `${nameIn}`,
                 `${emailIn}`,
-                `${subjectIn}`,
+                `${phoneIn}`,
                 `${messageIn}`
             ),
         };
-        await sendEmail(mailOption);
-
+        const userMailOption = {
+            email: emailIn,
+            subject: "Because We Care - We received your message",
+            message: userTemplate(
+                `${nameIn}`
+            ),
+        };
+        await sendEmail(businessMailOption);
+        await sendEmail(userMailOption);
 
         return res.sendStatus(201);
 
@@ -572,15 +643,16 @@ router.post("/contactForm", async(req, res) => {
 
     } catch(err) {
         console.log(err);
+        return res.sendStatus(500);
     }
 
-})
+});
 
 
 
 router.post("/consultForm", async(req, res) => {
 
-    const{nameIn, emailIn, locationIn, hoursIn, messageIn} = req.body
+    const{nameIn, emailIn, phoneIn, locationIn, hoursIn, messageIn} = req.body
 
     /*
     //Testing data
@@ -617,9 +689,7 @@ router.post("/consultForm", async(req, res) => {
                     html: option.message
                 };
 
-                await transporter.sendMail(mailOption, (err, info) => {
-                    if(err) console.log(err);
-                });
+                await transporter.sendMail(mailOption);
             } catch(err) {
                 console.log(err);
             }
@@ -627,56 +697,133 @@ router.post("/consultForm", async(req, res) => {
 
 
         //TODO: Reformat this to match the website's style and layout!
-        const mailTemplate = (Name, Email, location, hours, Message) => {
+       const mailTemplate = (Name, Email, Phone, Location, Hours, Message) => {
             return `<!DOCTYPE html>
             <html>
-            <body style="text-align: center; font-family: 'Verdana', serif; color: #000;">
-            <div
-            style="
-            max-width: 400px;
-            margin: 10px;
-            background-color: #fafafa;
-            padding: 25px;
-            border-radius: 20px;
-            "
-            >
-            <h3 style="text-align: left;">
-            Recieved a Consultation request:
-            </h3>
+                <body style="
+                    margin: 0;
+                    padding: 24px;
+                    font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+                    background: linear-gradient(to bottom, #f8daa3, #e8e1e7f7);
+                ">
+                    <div style="
+                        max-width: 600px;
+                        margin: 0 auto;
+                        background-color: #fafafa;
+                        padding: 32px;
+                        border-radius: 10px;
+                    ">
+                        <h1 style="
+                            text-align: center;
+                            font-size: 1.2rem;
+                            color: #ec4899;
+                            margin-top: 0;
+                            margin-bottom: 24px;
+                        ">
+                            Consultation Request
+                        </h1>
 
-            <p style="text-align: left;">
-            Name: ${Name}
-            </p>
-            <p style="text-align: left;">
-            Email: ${Email}
-            </p>
-            <p style="text-align: left;">
-            Location: ${location}
-            </p>
-            <p style="text-align: left;">
-            Hours per week: ${hours}
-            </p>
-            <p style="text-align: left;">
-            Additional Notes: ${Message}
-            </p>
-            </div>
-            </body>
+                        <p style="text-align: left; font-size: 0.9rem; color: #000; margin: 0 0 12px 0;">
+                            <strong>Name:</strong> ${Name}
+                        </p>
+
+                        <p style="text-align: left; font-size: 0.9rem; color: #000; margin: 0 0 12px 0;">
+                            <strong>Email:</strong> ${Email}
+                        </p>
+
+                        <p style="text-align: left; font-size: 0.9rem; color: #000; margin: 0 0 12px 0;">
+                            <strong>Phone:</strong> ${Phone || "Not Provided"}
+                        </p>
+
+                        <p style="text-align: left; font-size: 0.9rem; color: #000; margin: 0 0 12px 0;">
+                            <strong>Location:</strong> ${Location || "Not Provided"}
+                        </p>
+
+                        <p style="text-align: left; font-size: 0.9rem; color: #000; margin: 0 0 16px 0;">
+                            <strong>Hours per week:</strong> ${Hours || "Not Provided"}
+                        </p>
+
+                        <p style="text-align: left; font-size: 0.9rem; color: #000; margin: 0 0 8px 0;">
+                            <strong>Care Required:</strong>
+                        </p>
+
+                        <div style="
+                            background-color: rgba(252, 93, 172, 0.1);
+                            padding: 14px;
+                            border-radius: 8px;
+                        ">
+                            <p style="
+                                text-align: left;
+                                font-size: 0.9rem;
+                                color: #000;
+                                margin: 0;
+                                white-space: pre-wrap;
+                            ">${Message}
+                            </p>
+                        </div>
+                    </div>
+                </body>
             </html>`;
+        };
+        const userTemplate = (Name) => {
+            return `<!DOCTYPE html>
+            <html>
+                <body style="
+                    margin: 0;
+                    padding: 24px;
+                    font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+                    background: linear-gradient(to bottom, #f8daa3, #e8e1e7f7);
+                ">
+                    <div style="
+                        max-width: 600px;
+                        margin: 0 auto;
+                        background-color: #fafafa;
+                        padding: 32px;
+                        border-radius: 10px;
+                    ">
+                        <h1 style="
+                            text-align: center;
+                            font-size: 1.2rem;
+                            color: #ec4899;
+                            margin-top: 0;
+                            margin-bottom: 24px;
+                        ">
+                            We received your consultation request
+                        </h1>
 
+                        <p style="text-align: left; font-size: 0.9rem; color: #000; margin: 0 0 12px 0;">
+                            Hello ${Name},
+                        </p>
+
+                        <p style="text-align: left; font-size: 0.9rem; color: #000; margin: 0;">
+                            Thank you for reaching out to Because We Care. We received your consultation request and will get back to you soon.
+                        </p>
+                    </div>
+                </body>
+            </html>`;
         };
 
-        const mailOption = {
-            email: username,
+        const businessMailOption = {
+            email: process.env.EMAIL_USER,
             subject: `Request for Consultation`,
             message: mailTemplate(
                 `${nameIn}`,
                 `${emailIn}`,
+                `${phoneIn}`,
                 `${locationIn}`,
                 `${hoursIn}`,
                 `${messageIn}`
             ),
         };
-        await sendEmail(mailOption);
+        const userMailOption = {
+            email: emailIn,
+            subject: "Because We Care - We received your consultation request",
+            message: userTemplate(
+                `${nameIn}`
+            ),
+        };
+        await sendEmail(businessMailOption);
+        await sendEmail(userMailOption);
 
 
         return res.sendStatus(201);
@@ -685,9 +832,10 @@ router.post("/consultForm", async(req, res) => {
 
     } catch(err) {
         console.log(err);
+        return res.sendStatus(500);
     }
 
-})
+});
 
 
 router.post("/resetPassword", async(req, res) => {
