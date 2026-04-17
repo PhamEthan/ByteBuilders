@@ -44,6 +44,235 @@ router.get('/redirect', async (req, res) => {
   }
 })
 
+
+
+//Updates a given event, based on its given ID.
+router.post('/updateEvent', async(req, res)=> {
+  const calendar = google.calendar({version:'v3', auth:oauth2Client});
+
+  const { title, location, description, eventID } = req.body;
+
+  var newStart = new Date("2025-11-10T20:00:00Z");
+  var newEnd = new Date("2025-11-10T21:00:00Z");
+  var timeZone = 'America/Chicago';
+
+  //Input data seems to be pretty flexible. Format it like this:
+  var eventData = {
+    'summary': title,
+    'description' : description,
+    'location': location,
+  };
+
+  //this is done using "<calendarName>.events.update(calendarId:<CalID>, eventId:<EventID>, resource:<resource>)"
+  calendar.events.update({
+    calendarId : calendarID,
+    eventId : eventID,
+    resource: eventData
+  }, function (err, event) {
+    if(err) {
+      console.log('There was an error updating the event: ' + err);
+      return;
+    }
+    //Logging and debug, and redirect back to /landing.
+    console.log('event updated: %s', event.data);
+    eventID = event.data.id;
+    res.redirect('/landing');
+  });
+
+});
+
+
+
+//Handles creating a new event.
+router.post('/newEvent', async(req,res) => {
+  console.log("Trying to create new Event...");
+
+  const { title, location, description } = req.body;
+  var timeZone = 'America/Chicago';
+
+
+  const calendar = google.calendar({version:'v3', auth:oauth2Client});
+
+  //Input params require summary, start and end times. Other parameters are optional.
+  var eventInfo = req.body;
+  console.log(eventInfo);
+
+  var startTime = new Date("2026-04-17T10:00:00Z");
+  var endTime = new Date("2026-04-17T11:00:00Z");
+
+
+  var event = {
+    'anyoneCanAddSelf' : false,
+    'summary': title,
+    'description' : description,
+    'location': location,
+    'start' :{
+      'dateTime' : startTime,
+      'timeZone' : timeZone
+
+    },
+    'end' : {
+      'dateTime' : endTime,
+      'timeZone' : timeZone
+    }
+  };
+  //this is done using "<calendarName>.events.insert(calendarId:<CalID>, resource:<resource>)"
+  calendar.events.insert({
+    calendarId : calendarID,
+    resource: event
+  }, function (err, event) {
+    if(err) {
+      console.log('There was an error creating the event: ' + err);
+      return;
+    }
+    //Logging and debug, and redirect back to /landing.
+    console.log('event created: %s', event.data);
+    let eventID = event.data.id;
+    console.log(eventID);
+    res.json({eventID: eventID});
+
+  });
+});
+
+
+router.post('/deleteEvent', async(req, res) => {
+  const calendar = google.calendar({version:'v3', auth:oauth2Client});
+
+  const { eventID } = req.body;
+  console.log(eventID);
+  //Only takes calendarId and eventId as parameters.
+
+  //this is done using "<calendarName>.events.delete(calendarId:<CalID>, eventId:<EventID>)"
+  calendar.events.delete({
+    calendarId : calendarID,
+    eventId : eventID
+  }, function (err, event) {
+    if(err) {
+      console.log('There was an error deleting the event: ' + err);
+      return;
+    }
+    //Logging and debug, and redirect back to /landing.
+    console.log('event deleted!');
+  });
+});
+
+
+router.post('/getUserEvents', async (req,res) => {
+  //Take in the requesting user's ID, and find the list of events associated with the user's ID.
+  //find each of those, add their json objects to the list, and return them for FullCalendar to display.
+
+  const { userID } = req.body;
+  const calendar = google.calendar({version:'v3', auth:oauth2Client});
+
+  //request database entries for events for user:
+  try{
+    let eventRes = await fetch(apiBase + 'auth/reqUserEvents' , {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userID: userID }),
+    });
+    const data = await eventRes.json();
+    //console.log("apptRoutes Events: ------------------------\n", data.events);
+
+    var outputList = [];
+    var eventList = data.events;
+
+    var eventList = ["sqa3bfsgpr6f4d37ge2k3kg5r8",
+    "m0kkivcbt75hjaltcre0ckpldc"];
+    var eventLen = eventList.length;
+    var counter = 0;
+    for(const eventID of eventList)
+    {
+      //var eventID = eventList[i];
+
+      calendar.events.get({
+        calendarId: calendarID,
+        eventId : eventID
+      }, (err, response) => {
+        if (err) {
+          console.error('Can\'t fetch events');
+          res.send('Error');
+          return;
+        }
+        var eventObj = response.data;
+        //console.log(eventObj);
+        outputList.push(eventObj);
+        console.log(outputList);
+        counter += 1;
+        if(counter == eventLen)
+        {
+          res.json({ outputList: outputList});
+        }
+      });
+
+    }
+
+
+
+
+
+
+    /*
+     * const promises = data.events.map(async (eventID) => {
+     *   calendar.events.get({
+     *     calendarId: calendarID,
+     *     eventId : eventID
+  }, (err, response) => {
+  if (err) {
+    console.error('Can\'t fetch events');
+res.send('Error');
+return;
+  }
+  var eventObj = response.data;
+  //console.log(eventObj);
+  outputList.push(eventObj);
+
+  });
+console.log(outputList);
+  });
+*/
+
+    //await Promise.all(promises);
+
+    //res.json({events: data.events});
+    //console.log("apptRoutes Events: ------------------------\n", eventRes.events);
+
+
+  } catch(err) {
+    console.log(err);
+  }
+
+
+
+  //Ask google calendar for the JSON info on those events:
+
+
+
+  //return array of events to the request:
+
+
+
+
+
+});
+
+
+
+
+
+
+
+
+
+
+
+
+export default router;
+
+
+//Old Unused appointment routes.
+/*
+
 // check if authorized for calendar
 router.get('/available', authMiddleware, async (req, res) => {
   if (!tokensSet) {
@@ -251,4 +480,11 @@ router.get('/mine', authMiddleware, async (req, res) => {
   }
 })
 
-export default router
+
+*/
+
+
+
+
+
+

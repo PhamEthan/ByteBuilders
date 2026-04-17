@@ -54,7 +54,13 @@ function Calendar(){
         if (isEditing && selectedEvent) {   //if we selected this event and we're in edit mode
             setEvents((prevEvents) => {             //pass  previous events from state
                 return prevEvents.map(event => {        //create new arr of events by looping thru each event, looking for this event
-                    if (event.id === selectedEvent.id){     
+                    if (event.id === selectedEvent.id){
+                        //TODO: If the event is found, we send a request to appointmentRoutes to update the event.
+
+
+
+
+
                         return {                
                             ...event,                   //if found, copy all event properties, replace title and description.... 
                             title:title,                        //....with updated value
@@ -69,7 +75,6 @@ function Calendar(){
             
             
             })
-
             //Send request to appointmentRoutes to create
 
 
@@ -82,6 +87,11 @@ function Calendar(){
         }
 
         else{
+            //TODO: If the event didnt already exist, we send a request to appointment routes to create a new event, and return the entirety of the event's created info, so that it can be passed in below when creating our event object.
+            //This is so that they can share the same data, and so that our event object can have the eventID tied to it, in case we go in and edit/delete/update any data.
+
+
+
             setEvents((prevEvents) => [
             ...prevEvents,          //previous events, add new event to it 
             {
@@ -107,6 +117,9 @@ function Calendar(){
 
 
     const deleteEvent = () => {
+        //TODO: Somewhere in here, we'll call the function to delete the event via google calendar.
+
+
         if (!selectedEvent){return};
 
         setEvents((prevEvents) => {
@@ -115,6 +128,10 @@ function Calendar(){
 
             }); 
         });
+
+        //Somewhere in here, we'll call the function to delete the event via google calendar.
+
+
 
         resetForm();
         setIsPopupOpen(false);
@@ -146,7 +163,8 @@ function Calendar(){
 
     return (
 
-        //Testing code for JWT
+
+        //TODO: Inside here, we'll wanna add new code to add extra fields for selecting time, employee, user, etc. to ensure that all the data we need is initialized before calling any function to add, edit, update or delete the selected event.
 
         <div className="calendar-container">
             <FullCalendar
@@ -171,7 +189,7 @@ function Calendar(){
             }}  
             />
 
-            
+
             {isPopupOpen ? (
                 <div className="modal-overlay" onClick={()=>{
                     setIsPopupOpen(false);
@@ -270,7 +288,8 @@ function Calendar(){
 }
 
 
-
+//TODO: Make all of this function better, so that it only authenticates with the database when we NEED it to.
+//TODO: Also
 function setIsAuth(value)
 {
     isAuth = value;

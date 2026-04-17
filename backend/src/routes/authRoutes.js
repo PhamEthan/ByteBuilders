@@ -209,7 +209,6 @@ router.get('/getEvents', async(req,res) => {
 
     }
 
-
 });
 
 router.post('/addEventUsers', async(req, res) => {
@@ -872,6 +871,25 @@ router.post("/resetPassword", async(req, res) => {
         console.log(err);
         res.sendStatus(503)
     }
+});
+
+
+router.post("/reqUserEvents", async(req, res) => {
+
+    const { userID } = req.body;
+
+    //Retrieve the user's DB entry
+    const user = await prisma.user.findFirst({
+        where: {
+            id: userID,
+        }
+    });
+
+    //return the user's list of eventIDs
+    let events = user.calEvents;
+    console.log("Authroutes Events: ------------------------\n", events);
+    res.json({events: events});
+
 });
 
 
