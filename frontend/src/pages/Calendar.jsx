@@ -8,7 +8,10 @@ import { useState } from "react";
 
 const apiBase = 'http://localhost:5003/'
 
-let isAuth;
+
+const hours = [ "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"];
+const minutes = [ "00", "05", "10", "15","20", "25","30", "35","40", "45","50", "55"];
+const AMPM = ["PM", "AM"];
 
 function Calendar(){
 
@@ -17,9 +20,38 @@ function Calendar(){
     const [selectedDate, SetselectedDate] = useState(null);
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
+    const [location, setLocation] = useState("");
     const [selectedEvent, setSelectedEvent] = useState(null);
     const [isEditing, setIsEditing] = useState(false);
+    const [eventID, setEventID] = useState("");
+    const [eventEmployee, setEventEmployee] = useState("");
+    const [eventUser, setEventUser] = useState("");
+
+    const [eventStartHour, setEventStartHour] = useState("");
+    const [eventStartMinute, setEventStartMinute] = useState("");
+    const [eventStartAMPM, setEventStartAMPM] = useState("");
+
+    const [eventEndHour, setEventEndHour] = useState("");
+    const [eventEndMinute, setEventEndMinute] = useState("");
+    const [eventEndAMPM, setEventEndAMPM] = useState("");
+
+
+    const [startTime, setStartTime] = useState("");
+    const [endTime, setEndTime] = useState("");
+    const [patientName, setPatientName] = useState("");
+    const [caregiverName, setCaregiverName] = useState("");
+
+    const [eventsList, setEventsList] = useState([]);
+
+    const [employees, setEmployees] = useState([]);
+    const [users, setUsers] = useState([]);
+    const [role, setRole] = useState(null);
+    const [curUserID, setCurUserID] = useState("");
+    const [isAuth, setIsAuth] = useState(false);
+    const [eventsFulfilled, setEventsFulfilled] = useState(false);
+
     const [error, setError] = useState("");
+
     const clickDate = (info) => {
         console.log("date clicked", info.dateStr);
         SetselectedDate(info.dateStr);
@@ -59,11 +91,17 @@ function Calendar(){
 
 
 
+                        (async () => {
+                            var eventID = event.id;
+
+                            requestUpdateEvent(eventEmployee, eventUser, title,  location, description, startTime, endTime, eventID);
+                        })()
 
 
                         return {                
                             ...event,                   //if found, copy all event properties, replace title and description.... 
                             title:title,                        //....with updated value
+                            location: location,
                             extendedProps: {
                                 description:description
                             }
@@ -91,25 +129,82 @@ function Calendar(){
             //This is so that they can share the same data, and so that our event object can have the eventID tied to it, in case we go in and edit/delete/update any data.
 
 
+            // Time formatting and calculations.
+            //Formatting into ISO Standard
 
-            setEvents((prevEvents) => [
-            ...prevEvents,          //previous events, add new event to it 
+            // Add 5 hours to line up with UTC
+
+            var formattedStart = new Date(selectedDate.end);
+            var modifiedStart = parseInt(eventStartHour);
+            if(eventStartAMPM == "PM")
             {
-                //TEMP ID CHANGE LATER!!!!!!!!!!!
-                id: Date.now().toString(),   
-
-                title: title,
-                start: selectedDate.start,
-                end: selectedDate.end,
-                allDay:false,
-                extendedProps: {
-                    description: description
-                }
-
+                //Adjust by 12 hours if in the evening, to account for AM/PM for ISO time conversion
+                modifiedStart += 12;
             }
-            ]);
+            formattedStart.setHours(modifiedStart);
+            formattedStart.setMinutes(eventStartMinute);
+
+            var startISO = formattedStart.toISOString();
+
+
+
+            var formattedEnd = new Date(selectedDate.end);
+            var modifiedEnd = parseInt(eventEndHour);
+            if(eventEndAMPM == "PM")
+            {
+                //Adjust by 12 hours if in the evening, to account for AM/PM for ISO time conversion
+                modifiedEnd += 12;
+            }
+
+            //If the event starts on one day, and ends the next day, the date rolls over to the next day.
+            if(eventStartAMPM === "PM" && eventEndAMPM === "AM")
+            {
+                formattedEnd.setDate(formattedEnd.getDate() + 1);
+            }
+
+            formattedEnd.setHours(modifiedEnd);
+            formattedEnd.setMinutes(eventEndMinute);
+
+            var endISO = formattedEnd.toISOString();
+
+            console.log("Selected Start Time: ", formattedStart);
+            console.log("Selected End Time: ", formattedEnd);
+
+            setStartTime(startISO);
+            setEndTime(endISO);
+
+
+            (async () => {
+                var comboDescription = caregiverName + "-" + patientName + "=" + description;
+                comboDescription = comboDescription.toString();
+                console.log(comboDescription);
+                var newID = await requestAddEvent(eventEmployee, eventUser, startISO, endISO, title, comboDescription, location, curUserID);
+
+                setEvents((prevEvents) => [
+                    ...prevEvents,          //previous events, add new event to it
+                    {
+                        //TEMP ID CHANGE LATER!!!!!!!!!!!
+                        id: newID,
+
+                          title: title,
+
+                          start: selectedDate.start,
+                          end: selectedDate.end,
+                          allDay:false,
+                          extendedProps: {
+                              location: location,
+                              description: comboDescription
+
+                          }
+
+                    }
+                ]);
+
+            })()
+
+
         }
-        
+
         resetForm();
         setIsPopupOpen(false);
     };
@@ -118,12 +213,19 @@ function Calendar(){
 
     const deleteEvent = () => {
         //TODO: Somewhere in here, we'll call the function to delete the event via google calendar.
-
-
         if (!selectedEvent){return};
+
 
         setEvents((prevEvents) => {
             return prevEvents.filter(event => {
+
+                if(event.id === selectedEvent.id)
+                {
+                    console.log("eventID: ",event.id);
+                    console.log("Employee: ", event.extendedProps.caregiver);
+                    console.log("Patient: ", event.extendedProps.patient);
+                    requestDeleteEvent(event.id, event.extendedProps.caregiver, event.extendedProps.patient, curUserID);
+                }
                 return event.id !== selectedEvent.id    // if true (not slected event) dont delete, if false delete (match)
 
             }); 
@@ -131,48 +233,295 @@ function Calendar(){
 
         //Somewhere in here, we'll call the function to delete the event via google calendar.
 
-
-
         resetForm();
         setIsPopupOpen(false);
 
     };
+
+
+    //Handles time re-adjustment from ISO time, from UTC to the local timezone, so that it can be input on the event edit page.
+    function calculateTime(start, end)
+    {
+        var startTime = start.toISOString().split("T");
+        var startSplit = startTime[1].split(":");
+
+        setEventStartMinute(startSplit[1]);
+        var startHour = parseInt(startSplit[0]) - 5;
+
+        //Accounting for times where time zome adjustment causes the hour to be a negative number.
+        if(startHour < 0)
+        {
+            startHour += 12
+        }
+
+        //Determining if it's an AM or PM time slot
+        if(startHour > 12)
+        {
+            setEventStartAMPM("PM");
+            startHour -= 12;
+        }
+        else
+        {
+            setEventStartAMPM("AM");
+        }
+
+        //Adjusts to be a string, adding a 0 to the front if its a single digit number.
+        if(startHour < 10)
+        {
+            startHour = "0" + startHour.toString();
+        }
+        else
+        {
+            startHour = startHour.toString();
+        }
+        setEventStartHour(startHour);
+
+
+
+
+        var endTime = end.toISOString().split("T");
+        console.log("EndTime: ", endTime);
+        var endSplit = endTime[1].split(":");
+
+        setEventEndMinute(endSplit[1]);
+        var endHour = parseInt(endSplit[0]) - 5;
+
+        //Accounting for times where time zome adjustment causes the hour to be a negative number.
+        if(endHour < 0)
+        {
+            endHour += 12
+        }
+
+        console.log("EndHour: ", endHour);
+
+
+        //Determining if it's an AM or PM time slot
+        if(endHour > 12)
+        {
+            setEventEndAMPM("PM");
+            endHour -= 12;
+        }
+        else
+        {
+            setEventEndAMPM("AM");
+        }
+
+        //Adjusts to be a string, adding a 0 to the front if its a single digit number.
+        if(endHour < 10)
+        {
+            endHour = "0" + endHour.toString();
+        }
+        else
+        {
+            endHour = endHour.toString();
+        }
+
+        setEventEndHour(endHour);
+    }
+
 
     const handleEventClick = (info) => {
         const event = info.event;
 
         setSelectedEvent(event);
         setTitle(event.title);
+        setEventID(event.id);
+        console.log(event.id);
+        setLocation(event.extendedProps.location);
         setDescription(event.extendedProps.description || "");
+        calculateTime(event.start, event.end);
+        setStartTime(event.start);
+        setEndTime(event.end);
+        setPatientName(event.extendedProps.patient);
+        setCaregiverName(event.extendedProps.caregiver);
+        setEventUser(event.extendedProps.patient);
+        setEventEmployee(event.extendedProps.caregiver);
         setIsEditing(false);
         setIsPopupOpen(true);
-        
-
     };
 
     const resetForm = () => {
         setTitle("");
         setDescription("");
+        setLocation("");
+        setEventID("");
         setError("");
         setSelectedEvent(null);
         setIsEditing(false);
         SetselectedDate(null);
     }
 
-    authenticate();
 
-    return (
+    function handleEmployeeSelect(e)
+    {
+        //Recieves the value as a string with a comma. The values are then split.
+        //console.log("Selected Employee: ", e.target.value);
+        const emplSel = e.target.value.split(",");
+        //the first value is the userID, the second value is their name.
+        setEventEmployee(emplSel[0]);
+        setCaregiverName(emplSel[1]);
+    }
+
+    function handleUserSelect(e)
+    {
+        //console.log("Selected User: ", e.target.value);
+        const userSel = e.target.value.split(",");
+        setEventUser(userSel[0]);
+        setPatientName(userSel[1]);
+
+    }
+
+    function handleHourStartSelect(e)
+    {
+        console.log("selected hour: ", e.target.value);
+        const hourSel = e.target.value;
+        setEventStartHour(hourSel);
+    }
+    function handleMinuteStartSelect(e)
+    {
+        console.log("selected minute: ", e.target.value);
+        const minSel = e.target.value;
+        setEventStartMinute(minSel);
+    }
+
+    function handleHourEndSelect(e)
+    {
+        console.log("selected hour: ", e.target.value);
+        const hourSel = e.target.value;
+        setEventEndHour(hourSel);
+    }
+    function handleMinuteEndSelect(e)
+    {
+        console.log("selected minute: ", e.target.value);
+        const minSel = e.target.value;
+        setEventEndMinute(minSel);
+    }
+
+    function handleEventStartAMPM(e)
+    {
+        console.log("selected AM/PM: ", e.target.value);
+        const AMPMSel = e.target.value;
+        setEventStartAMPM(AMPMSel);
+    }
+
+    function handleEventEndAMPM(e)
+    {
+        console.log("selected AM/PM: ", e.target.value);
+        const AMPMSel = e.target.value;
+        setEventEndAMPM(AMPMSel);
+    }
 
 
-        //TODO: Inside here, we'll wanna add new code to add extra fields for selecting time, employee, user, etc. to ensure that all the data we need is initialized before calling any function to add, edit, update or delete the selected event.
+    function displayEvents(eventsResponse)
+    {
 
-        <div className="calendar-container">
+        var filledEvents = new Array();
+        for (const index in eventsResponse)
+        {
+            var newTitle = eventsResponse[index].summary;
+            var newLocation = eventsResponse[index].location;
+
+            var inputDescription = eventsResponse[index].description;
+            var employee = inputDescription.split("-");
+            var patient = employee[1].split("=");
+
+            var employeeName = employee[0];
+            var patientName = patient[0];
+            var newDescription = patient[1];
+
+
+            //var newDescription = eventsResponse[index].description;
+            var newEventID = eventsResponse[index].id;
+
+
+            var start = eventsResponse[index].start.dateTime;
+            var end = eventsResponse[index].end.dateTime;
+
+            filledEvents.push({
+                id: newEventID,
+                title: newTitle,
+                start: start,
+                end: end,
+                allDay:false,
+                extendedProps: {
+                    location: newLocation,
+                    description: newDescription,
+                    caregiver: employeeName,
+                    patient: patientName,
+                }
+
+            });
+            setEvents(filledEvents);
+
+        }
+    }
+
+
+
+    //Authenticates the user from their cookie once
+    if(!isAuth)
+    {
+        setEventsFulfilled(false);
+        setRole(null);
+        (async () => {
+            console.log("Authenticate Async");
+            var dataPacket = await authenticate();
+            setRole(dataPacket[0]);
+
+
+
+            if(dataPacket[0] === "ADMIN")
+            {
+                setEmployees(dataPacket[3]);
+                setUsers(dataPacket[4]);
+                setCurUserID(dataPacket[5]);
+            }
+            else
+            {
+                //Redirect to login
+            }
+            setEventsList(dataPacket[1]);
+
+        })()
+    setIsAuth(true);
+    }
+
+    if(role != null && eventsFulfilled == false)
+    {
+
+        (async () => {
+
+        var eventsResponse = await populateEvents(eventsList);
+        console.log("Getting User's Events");
+
+        displayEvents(eventsResponse);
+
+        })()
+
+
+    setEventsFulfilled(true);
+    }
+
+    if(eventsFulfilled == true)
+    {
+        return (
+
+
+            //TODO: Inside here, we'll wanna add new code to add extra fields for selecting time, employee, user, etc. to ensure that all the data we need is initialized before calling any function to add, edit, update or delete the selected event.
+
+            <div className="calendar-container">
             <FullCalendar
             plugins={[dayGridPlugin,timeGridPlugin,interactionPlugin]}
             initialView={"dayGridMonth"}
             //dateClick={clickDate}
             eventClick={handleEventClick}
-            selectable={true}
+
+            /* Empty dates are only selectable if the user is an admin or caregiver. */
+            selectable={
+                (role ==="CAREGIVER" || role ==="ADMIN") ?
+                true : false
+            }
+
             select={handleSelect}
             events={events}
             headerToolbar={{
@@ -186,7 +535,7 @@ function Calendar(){
                 minute: '2-digit',
                 hour12: true,
                 meridiem:'short'
-            }}  
+            }}
             />
 
 
@@ -195,154 +544,444 @@ function Calendar(){
                     setIsPopupOpen(false);
                     resetForm();
                 }}>
-                    <div className="modal-box" onClick={(event) => event.stopPropagation()}>
-                        <button
-                            className="modal-close" onClick={()=>{
-                                setIsPopupOpen(false);
-                                resetForm();
-                            }}
-                        >X</button>
-                        <h2>
-                            {
-                            selectedEvent ? (isEditing ? "Edit Event": "Event Details")
-                            : "Create Event"
-                            }
-                        </h2>
-                        <form
-                            className="modal-form"
-                            onSubmit={(event) => {
-                                event.preventDefault();
-                                if (selectedEvent && !isEditing){
-                                    setIsEditing(true);
-                                    return;
-                                }
-                                saveEvent();
-                            }}
-                        >
-                            <div className="form-section">
-                                <label htmlFor="event-title">Event Title *</label>
-                                <input 
-                                    id="event-title"
-                                    type="text"
-                                    
-                                    value ={title}
-                    
-                                    disabled={!isEditing && selectedEvent} 
-                                    onChange={ (event) => setTitle(event.target.value)}
-                                    required
-                                    maxLength={100}
-                                />
-                                {error ? <p className="error-txt">{error}</p>: null}
-                            </div>
+                <div className="modal-box" onClick={(event) => event.stopPropagation()}>
+                <button
+                className="modal-close" onClick={()=>{
+                    setIsPopupOpen(false);
+                    resetForm();
+                }}
+                >X</button>
+                <h2>
+                {
+                    selectedEvent ? (isEditing ? "Edit Event": "Event Details")
+                    : "Create Event"
+                }
+                </h2>
+                <form
+                className="modal-form"
+                onSubmit={(event) => {
+                    event.preventDefault();
+                    if (selectedEvent && !isEditing){
+                        setIsEditing(true);
+                        return;
+                    }
+                    saveEvent();
+                }}
+                >
 
-                            <div className="form-section">
-                                <label htmlFor="event-description">Event Description</label>
-                                <textarea 
-                                    id="event-description"
-                                    rows={5}
-                                    disabled={!isEditing && selectedEvent}
-                                    
-                                    value={description}
-                                    onChange={(event) => setDescription(event.target.value)}
-                                />
-                            </div>
- 
-                            <div className="calendar-modal-btns">
-                                <button
-                                    type="submit"
-                                    className="hero-btn primary"
-                                >
-                                    {selectedEvent ? (isEditing ? "Update" : "Edit")
-                                        : "Save"
-                                    }
-                                </button>
 
-                                {selectedEvent && isEditing ? (
-                                    <button 
-                                        type="button"
-                                        className="hero-btn secondary"
-                                        onClick={deleteEvent}
-                                    >Delete
-                                    </button>
-                                ): null}
 
-                                <button
-                                    type="button"
-                                    className="hero-btn secondary"
-                                    onClick={() => {
-                                    setIsPopupOpen(false);
-                                    resetForm();
-                                    }}
-                                >
-                                    Cancel
-                                </button>
-                            </div>
-                        </form>    
+                {/*  Caregiver event editing formatting */}
+                { ((role === "CAREGIVER"  || role === "ADMIN") && isEditing) &&
+                    <div>
+                    <div className="form-section">
+                    <label htmlFor="event-title">Event Title *</label>
+                    <input
+                    id="event-title"
+                    type="text"
+
+                    value ={title}
+
+                    disabled={!isEditing && selectedEvent}
+                    onChange={ (event) => setTitle(event.target.value)}
+                    required
+                    maxLength={100}
+                    />
+                    {error ? <p className="error-txt">{error}</p>: null}
                     </div>
+
+
+                    <div className="form-section">
+                    <label htmlFor="event-location">Event Location *</label>
+                    <input
+                    id="event-location"
+                    type="text"
+
+                    value ={location}
+
+                    disabled={!isEditing && selectedEvent}
+                    onChange={ (event) => setLocation(event.target.value)}
+                    required
+                    maxLength={100}
+                    />
+                    {error ? <p className="error-txt">{error}</p>: null}
+                    </div>
+
+                    <div className = "form-section">
+                    <label htmlFor="event-employee">Caregiver *</label>
+                    <select
+                    name="Caregivers"
+                    onChange={e => handleEmployeeSelect(e)}
+                    disabled={!isEditing && selectedEvent}
+                    //value={eventEmployee}
+                    required
+                    >
+                    <option value="">Select an Employee</option>
+                    {employees.map((employee, key) =>  (
+                        <option key={key} value={[employee.id, employee.fullName]}>
+                        {employee.fullName}
+                        </option>
+                    ))}
+                    </select>
+                    </div>
+
+                    <div className = "form-section">
+                    <label htmlFor="event-patient">Patient *</label>
+                    <select
+                    name="Patients"
+                    onChange={e => handleUserSelect(e)}
+                    disabled={!isEditing && selectedEvent}
+                    //value={eventUser}
+                    required
+                    >
+                    <option value="">Select a Patient</option>
+                    {users.map((user, key) =>  (
+                        <option key={key} value={[user.id, user.fullName]}>
+                        {user.fullName}
+                        </option>
+                    ))}
+                    </select>
+                    </div>
+
+
+                    <div className = "form-dropdown" >
+                    <label htmlFor="event-start-time"> <span>Starting Time * </span></label>
+                    <div className = "form-time">
+                    <select
+                    name="Time-Hour"
+                    onChange={e => handleHourStartSelect(e)}
+                    disabled={!isEditing && selectedEvent}
+                    value={eventStartHour}
+                    required
+                    >
+                    <option value="">XX</option>
+                    {hours.map((hour, key) =>  (
+                        <option key={key} value={hour}>
+                        {hour}
+                        </option>
+                    ))}
+                    </select>
+                    :
+                    <select
+                    name="Time-Minute"
+                    onChange={e2 => handleMinuteStartSelect(e2)}
+                    disabled={!isEditing && selectedEvent}
+                    value={eventStartMinute}
+                    required
+                    >
+                    <option value="">XX</option>
+                    {minutes.map((minute, key) =>  (
+                        <option key={key} value={minute}>
+                        {minute}
+                        </option>
+                    ))}
+                    </select>
+                    <select
+                    name="Time-AMPM"
+                    onChange={e2 => handleEventStartAMPM(e2)}
+                    disabled={!isEditing && selectedEvent}
+                    value={eventStartAMPM}
+                    required
+                    >
+                    <option value="">AM/PM</option>
+                    {AMPM.map((val, key) =>  (
+                        <option key={key} value={val}>
+                        {val}
+                        </option>
+                    ))}
+                    </select>
+                    </div>
+                    </div>
+
+
+                    <div className = "form-dropdown" >
+                    <label htmlFor="event-end-time">Ending Time *</label>
+                    <div className = "form-time">
+                    <select
+                    name="Time-Hour"
+                    onChange={e => handleHourEndSelect(e)}
+                    disabled={!isEditing && selectedEvent}
+                    value={eventEndHour}
+                    required
+                    >
+                    <option value="">XX</option>
+                    {hours.map((hour, key) =>  (
+                        <option key={key} value={hour}>
+                        {hour}
+                        </option>
+                    ))}
+                    </select>
+                    :
+                    <select
+                    name="Time-Minute"
+                    onChange={e2 => handleMinuteEndSelect(e2)}
+                    disabled={!isEditing && selectedEvent}
+                    value={eventEndMinute}
+                    required
+                    >
+                    <option value="">XX</option>
+                    {minutes.map((minute, key) =>  (
+                        <option key={key} value={minute}>
+                        {minute}
+                        </option>
+                    ))}
+                    </select>
+
+                    <select
+                    name="Time-AMPM"
+                    onChange={e2 => handleEventEndAMPM(e2)}
+                    disabled={!isEditing && selectedEvent}
+                    value={eventEndAMPM}
+                    required
+                    >
+                    <option value="">AM/PM</option>
+                    {AMPM.map((val, key) =>  (
+                        <option key={key} value={val}>
+                        {val}
+                        </option>
+                    ))}
+                    </select>
+                    </div>
+                    </div>
+
+
+
+                    <div className="form-section">
+                    <label htmlFor="event-description">Event Description</label>
+                    <textarea
+                    id="event-description"
+                    rows={5}
+                    disabled={!isEditing && selectedEvent}
+
+                    value={description}
+                    onChange={(event) => setDescription(event.target.value)}
+                    />
+                    </div>
+
+
+                    </div>
+                }
+
+
+                {/* Display for patients, or employees that arent editing it.*/}
+                { (role == "PATIENT" || !isEditing) &&
+                    <div>
+                    <div className = "form-section">
+                    <label htmlFor="event-patient">Title</label>
+                    <div className = "display-box" value={title}>
+                    {title}
+                    </div>
+                    </div>
+
+
+                    <div className = "form-section">
+                    <label htmlFor="event-patient" >Location</label>
+                    <div className = "display-box" value={location}>
+                    {location}
+                    </div>
+                    </div>
+
+
+                    <div className = "form-section">
+                    <label htmlFor="event-patient">Caregiver</label>
+                    <div className = "display-box" value={caregiverName}>
+                    {caregiverName}
+                    </div>
+                    </div>
+
+
+                    <div className = "form-section">
+                    <label htmlFor="event-patient" >Patient</label>
+                    <div className = "display-box" value={patientName}>
+                    {patientName}
+                    </div>
+                    </div>
+
+                    <div className = "form-dropdown" >
+                    <label htmlFor="event-start-time">Start Time: </label>
+                    <div className = "display-box" value ={startTime.toLocaleString()}>
+                    {startTime.toLocaleString()}
+                    </div>
+                    </div>
+
+                    <div className = "form-dropdown" >
+                    <label htmlFor="event-end-time">End Time: </label>
+                    <div className = "display-box" value ={endTime.toLocaleString()}>
+                    {endTime.toLocaleString()}
+                    </div>
+                    </div>
+
+                    <div className = "form-dropdown" >
+                    <label htmlFor="event-descriptio">Description</label>
+                    <div className = "display-box" value ={description} disabled={true}>
+                    {description}
+                    </div>
+                    </div>
+
+
+                    </div>
+                }
+
+
+
+
+
+
+                {/*     Hides the Edit/Update/Cancel/Delete buttons for patients*/}
+                { role !== "PATIENT" &&
+                    <div className="calendar-modal-btns">
+                    <button
+                    type="submit"
+                    className="hero-btn primary"
+                    >
+
+                    {selectedEvent ? (isEditing ? "Update" : "Edit")
+                        : "Save"
+                    }
+
+
+
+                    </button>
+
+                    {selectedEvent && isEditing ? (
+                        <button
+                        type="button"
+                        className="hero-btn secondary"
+                        onClick={deleteEvent}
+                        >Delete
+                        </button>
+                    ): null}
+
+                    <button
+                    type="button"
+                    className="hero-btn secondary"
+                    onClick={() => {
+                        setIsPopupOpen(false);
+                        resetForm();
+                    }}
+                    >
+                    Cancel
+                    </button>
+                    </div>
+                }
+                </form>
+                </div>
                 </div>
             ) : null}
 
-        </div>
-        
-    )
-}
+            </div>
 
-
-//TODO: Make all of this function better, so that it only authenticates with the database when we NEED it to.
-//TODO: Also
-function setIsAuth(value)
-{
-    isAuth = value;
-}
-
-
-
-async function authenticate() {
-   let res = await fetch(apiBase + 'auth/getEvents', {
-        credentials: 'include',
-        method: 'GET',
-        header: { 'Content-Type' : 'application/json'},
-    });
-    if(res.ok)
-    {
-
-        //Returns the authenticated cookie data as debug data.
-        console.log("Logged in as: ", res.json());
-        console.log("getting calendar events...");
-        setIsAuth(true);
-
-
-        //From here, we can request the calendar event IDs, for display
-
-
-
-
+        )
     }
 }
 
 
-async function requestAddEvent(employeeID, userID, date, title, description, location)
+
+
+
+
+
+
+async function authenticate() {
+
+
+    let res = await fetch(apiBase + 'auth/authenticateUser', {
+        credentials: 'include',
+        method: 'POST',
+        header: { 'Content-Type' : 'application/json'},
+    });
+
+
+        const data = await res.json();
+        //Returns the authenticated cookie data as debug data.
+        console.log("Logged in as: ", data.role);
+        console.log("getting calendar events...");
+
+
+        var role = data.role;
+        var events = data.events;
+        var name = data.fullName;
+        if(data.role === "ADMIN")
+        {
+            var employees = data.empl;
+            var users = data.user;
+            var adminID = data.id;
+            console.log("Logged in as: ", data.id);
+            return [role, events, name, employees, users, adminID];
+        }
+        else
+        {
+            return [role, events, name]
+        }
+
+
+
+        //From here, we can request the calendar event IDs, for display
+}
+
+
+async function requestAddEvent(employeeID, userID, startTime, endTime, title, description, location, adminID)
 {
 
+    var timeZone = 'America/Chicago';
 
-    //TODO: Add an update/delete function for the events, using the associated frontend functions
-    //TODO: Link and test this with the google calendar API.
-    //TODO: Test using actual user Accounts.
+    var eventID;
 
     try {
-        let res = await fetch('/appointments/book/:eventId', {
+        let res = await fetch(apiBase + 'appointments/newEvent', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({employee: employeeID, client: userID, date: date, title: title, description: description, location: location})
+            body: JSON.stringify({ title: title, location: location, description: description, startTime: startTime, endTime: endTime}),
         });
-        const data = await res.json().catch(() => ({}))
+        const data = await res.json();
+        //console.log(res.body); //= res.body.eventID;
+        var eventID = data.eventID;
+        //console.log("eventID: ", eventID);
+
         if(res.ok)
         {
-            let eventID; //= res.body.eventID;
+
+            console.log("eventID: ", eventID);
             //get the returned eventID, and make a request to add it to the emmployee and user DB entries.
 
-            let userIDs = [employeeID, userID];
+            let userIDs = [parseInt(employeeID), parseInt(userID), parseInt(adminID)];
+            console.log(userIDs);
             let res2 = await fetch(apiBase + 'auth/addEventUsers', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userIDs: userIDs, eventID: eventID })
+            });
+
+        }
+
+
+    } catch (err) {
+        console.log(err);
+    }
+    return (eventID);
+}
+
+
+async function requestUpdateEvent(employeeID, userID, title,  location, description, newStart, newEnd, eventID)
+{
+    //Check if employee and user ID are the same as before, before making the request, so that they can be removed or added as needed.
+
+    try {
+        let res = await fetch(apiBase + 'appointments/updateEvent', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title: title, location: location, description: description, newStart: newStart, newEnd: newEnd, eventID: eventID}),
+        });
+
+        if(res.ok)
+        {
+
+            //Update users with the event ID, removing or adding as needed.
+            eventID = res.body; //= res.body.eventID;
+            //get the returned eventID, and make a request to add it to the emmployee and user DB entries.
+
+            let userIDs = [parseInt(employeeID), parseInt(userID)];
+            let res2 = await fetch(apiBase + 'auth/updateEventUsers', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ userIDs: userIDs, eventID: eventID })
@@ -357,20 +996,80 @@ async function requestAddEvent(employeeID, userID, date, title, description, loc
                 throw new Error(data.message || 'Failed to add eventID to the given users');
             }
 
+
+
         }
         else
         {
-            throw new Error(data.message || 'Failed to add the event to google calendar');
+            //throw new Error(data.message || 'Failed to add the event to google calendar');
         }
 
 
     } catch (err) {
         console.log(err);
     }
+    return eventID;
+
 
 
 }
 
+
+async function requestDeleteEvent(eventID, caregiverName, patientName, adminID)
+{
+    let res;
+    try {
+        /*
+        res = await fetch(apiBase + 'appointments/deleteEvent', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ eventID: eventID}),
+        });
+        */
+
+
+        console.log("Deleted event: ", eventID);
+        //let userIDs = [parseInt(employeeID), parseInt(userID)];
+        let res2 = await fetch(apiBase + 'auth/removeEventUser', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ eventID: eventID, caregiver: caregiverName, patient: patientName, admin: adminID })
+        });
+
+        if(res.ok)
+        {
+
+
+        }
+
+
+    } catch(err) {
+        console.log(err);
+    }
+
+}
+
+
+async function populateEvents(eventList)
+{
+    let res;
+    try {
+        res = await fetch(apiBase + 'appointments/getUserEvents', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ eventList: eventList }),
+        });
+        const data = await res.json();
+        var googleEvents = data.outputList;
+        console.log("Found User Google Events");
+        return googleEvents;
+
+
+    } catch(err) {
+        console.log(err);
+    }
+
+}
 
 
 export default Calendar;

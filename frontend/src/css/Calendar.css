@@ -163,6 +163,39 @@
   gap: 0.45rem;
 }
 
+.form-dropdown {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  width: 50;
+}
+
+.form-time {
+  display: flex;
+  flex-direction: row;
+}
+
+.form-dropdown label {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.form-dropdown select {
+  display: inline-block;
+  flex-direction: row;
+  margin-left: 3px;
+  margin-right: 3px;
+  gap: 0.45rem;
+  width: 50;
+  border: 1px solid #8b8c8d;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  box-sizing: border-box;
+  background-color: #fff;
+}
+
 .form-section label {
   font-size: 0.95rem;
   font-weight: 600;
@@ -214,4 +247,16 @@
   margin: 0.25rem 0 0;
   color: red;
   font-size: 0.9rem;
+}
+
+.display-box {
+  width: 100%;
+  padding: 0.9rem 1rem;
+  margin-bottom: 10px;
+  border: 1px solid #8b8c8d;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  box-sizing: border-box;
+  background-color: #fff;
 }

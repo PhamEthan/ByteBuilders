@@ -10,6 +10,7 @@ import Main from "./layouts/Main";
 import Checkin from "./pages/Checkin";
 import Schedule from "./pages/Schedule";
 import Notes from "./pages/Notes";
+import Verify from "./pages/Verify";
 
 import { Routes, Route } from "react-router-dom";
 import React, { useState } from "react";
@@ -28,6 +29,7 @@ function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/fileviewer" element={<FileViewer />} />
       <Route path="/resetPassword" element={<ResetPassword />}/>
+      <Route path="/verify" element={<Verify />}/>
       </Route>
 
       {/* Employee Route WITHOUT Navbar + Footer */}

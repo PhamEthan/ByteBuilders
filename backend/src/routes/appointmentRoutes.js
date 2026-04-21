@@ -5,6 +5,11 @@ import authMiddleware from '../middleware/authMiddleware.js'
 
 const router = express.Router()
 
+const apiBase = 'http://localhost:5003/'
+const calendarID = '77c1654de204e04f575eacfa0e066b745c1e640154a35336ce3ba7877501f056@group.calendar.google.com';
+
+
+
 // Google Auth set up
 const oauth2Client = new google.auth.OAuth2(
   process.env.CLIENT_ID,
@@ -50,10 +55,8 @@ router.get('/redirect', async (req, res) => {
 router.post('/updateEvent', async(req, res)=> {
   const calendar = google.calendar({version:'v3', auth:oauth2Client});
 
-  const { title, location, description, eventID } = req.body;
+  const { title, location, description, newStart, newEnd, eventID } = req.body;
 
-  var newStart = new Date("2025-11-10T20:00:00Z");
-  var newEnd = new Date("2025-11-10T21:00:00Z");
   var timeZone = 'America/Chicago';
 
   //Input data seems to be pretty flexible. Format it like this:
@@ -61,6 +64,16 @@ router.post('/updateEvent', async(req, res)=> {
     'summary': title,
     'description' : description,
     'location': location,
+    'start' :{
+      'dateTime' : newStart,
+      'timeZone' : timeZone
+
+    },
+    'end' : {
+      'dateTime' : newEnd,
+      'timeZone' : timeZone
+    }
+
   };
 
   //this is done using "<calendarName>.events.update(calendarId:<CalID>, eventId:<EventID>, resource:<resource>)"
@@ -75,8 +88,6 @@ router.post('/updateEvent', async(req, res)=> {
     }
     //Logging and debug, and redirect back to /landing.
     console.log('event updated: %s', event.data);
-    eventID = event.data.id;
-    res.redirect('/landing');
   });
 
 });
@@ -87,7 +98,7 @@ router.post('/updateEvent', async(req, res)=> {
 router.post('/newEvent', async(req,res) => {
   console.log("Trying to create new Event...");
 
-  const { title, location, description } = req.body;
+  const { title, location, description, startTime, endTime } = req.body;
   var timeZone = 'America/Chicago';
 
 
@@ -97,8 +108,6 @@ router.post('/newEvent', async(req,res) => {
   var eventInfo = req.body;
   console.log(eventInfo);
 
-  var startTime = new Date("2026-04-17T10:00:00Z");
-  var endTime = new Date("2026-04-17T11:00:00Z");
 
 
   var event = {
@@ -161,29 +170,28 @@ router.post('/getUserEvents', async (req,res) => {
   //Take in the requesting user's ID, and find the list of events associated with the user's ID.
   //find each of those, add their json objects to the list, and return them for FullCalendar to display.
 
-  const { userID } = req.body;
+  const { eventList } = req.body;
   const calendar = google.calendar({version:'v3', auth:oauth2Client});
 
   //request database entries for events for user:
   try{
+    /*
     let eventRes = await fetch(apiBase + 'auth/reqUserEvents' , {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userID: userID }),
     });
     const data = await eventRes.json();
-    //console.log("apptRoutes Events: ------------------------\n", data.events);
+    console.log("apptRoutes Events: ------------------------\n", data.events);
+    */
+
+    //var eventList = data.events;
 
     var outputList = [];
-    var eventList = data.events;
-
-    var eventList = ["sqa3bfsgpr6f4d37ge2k3kg5r8",
-    "m0kkivcbt75hjaltcre0ckpldc"];
     var eventLen = eventList.length;
     var counter = 0;
     for(const eventID of eventList)
     {
-      //var eventID = eventList[i];
 
       calendar.events.get({
         calendarId: calendarID,
@@ -206,38 +214,6 @@ router.post('/getUserEvents', async (req,res) => {
       });
 
     }
-
-
-
-
-
-
-    /*
-     * const promises = data.events.map(async (eventID) => {
-     *   calendar.events.get({
-     *     calendarId: calendarID,
-     *     eventId : eventID
-  }, (err, response) => {
-  if (err) {
-    console.error('Can\'t fetch events');
-res.send('Error');
-return;
-  }
-  var eventObj = response.data;
-  //console.log(eventObj);
-  outputList.push(eventObj);
-
-  });
-console.log(outputList);
-  });
-*/
-
-    //await Promise.all(promises);
-
-    //res.json({events: data.events});
-    //console.log("apptRoutes Events: ------------------------\n", eventRes.events);
-
-
   } catch(err) {
     console.log(err);
   }

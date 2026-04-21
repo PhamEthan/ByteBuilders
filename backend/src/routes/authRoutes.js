@@ -158,7 +158,7 @@ router.post('/register', async (req, res) => {
                 message: mailTemplate(
                 "Complete Account Registration",
                 "Please finish registering your BecauseWeCare client account using the link below.",
-                `${process.env.FRONTEND_URL}/resetPassword?id=${user.id}&token=${registrationToken}`,
+                `${process.env.FRONTEND_URL}/verify?id=${user.id}&token=${registrationToken}`,
                 "Register Account"
                 ),
             };
@@ -175,69 +175,6 @@ router.post('/register', async (req, res) => {
         return res.sendStatus(503)
     }
 })
-
-router.get('/getEvents', async(req,res) => {
-    //Cookie authentication code:
-    const cookieToken = req.cookies.authcookie;
-    if(!cookieToken) console.log("invalid cookie");
-
-    let userID;
-    jwt.verify(cookieToken, process.env.JWT_SECRET, (err, user) => {
-        if(err) return console.log("Error or invalid cookie");
-       // req.user = user;
-        console.log("Authenticated with cookie as user: ", user);
-        res.status(200).json({user});
-        userID = user.id;
-    });
-
-    const user = await prisma.user.findUnique({
-        where: {
-            id: userID,
-        }
-    })
-
-    if (!user) {
-        return res.sendStatus(404).send({ message: "User not Found"});
-    }
-    else {
-        //Find all calendar events from the user
-        let events = new Object();
-        console.log(user.calEvents);
-
-        //send list of calendar events back
-
-
-    }
-
-});
-
-router.post('/addEventUsers', async(req, res) => {
-
-    //Save the array of userIDs
-    //const { userIDs, eventID } = req.body;
-
-    //Testing Data
-    let userIDs = [25, 26];
-    let eventID = 123456;
-
-
-    try {
-
-        //Correctly adds the eventID to the users' database entry
-        const updateUsers = await prisma.user.updateMany({
-            where: {
-                id: {in: userIDs }
-            },
-            data: { calEvents: {push: String(eventID)} },
-        });
-
-    } catch(err) {
-        console.log(err);
-    }
-
-
-})
-
 
 
 /*  OLD Register Code (Uses username and hashed password)
@@ -857,12 +794,32 @@ router.post("/resetPassword", async(req, res) => {
 
             });
         }
-        else if(user.registerToken === token)
+
+    } catch (err) {
+        console.log(err);
+        res.sendStatus(503)
+    }
+});
+
+router.post("/verifyAcc", async(req, res) => {
+    //Validate that the user ID exists
+    const {password, id, token, fullName} = req.body
+
+    try {
+        const user = await prisma.user.findUnique({
+            where: {id: parseInt(id)}
+        })
+
+        // If the user is redirected to this page it checks if the link is being used for a password reset,
+        // or to complete account registration.
+
+        if(user.registerToken === token)
         {
-            const hashedPassword = bcrypt.hashSync(password.password, 8);
+
+            const hashedPassword = bcrypt.hashSync(password, 8);
             const updatePass = await prisma.user.update({
                 where: {username : user.username},
-                data:  {password: hashedPassword, verified: true, registerToken: ""},
+                data:  {password: hashedPassword, verified: true, registerToken: "", fullName: fullName},
 
             });
         }
@@ -873,6 +830,52 @@ router.post("/resetPassword", async(req, res) => {
     }
 });
 
+
+
+
+router.post('/authenticateUser', async(req, res) => {
+    const cookieToken = req.cookies.authcookie;
+    if(!cookieToken) console.log("invalid cookie");
+
+    let userID;
+    jwt.verify(cookieToken, process.env.JWT_SECRET, (err, user) => {
+        if(err) return console.log("Error or invalid cookie");
+        // req.user = user;
+        console.log("Authenticated with cookie as user: ", user);
+        userID = user.id;
+    });
+
+    const user = await prisma.user.findFirst({
+        where: {
+            id: userID,
+        }
+    });
+
+    let authType = user.role;
+
+    if(user.role === 'ADMIN')
+    {
+
+        const patients = await prisma.user.findMany({
+            where: {
+                role: "PATIENT"
+            }
+        });
+
+        const employee = await prisma.user.findMany({
+            where: {
+                role: "CAREGIVER"
+            },
+        });
+
+
+        res.json({role: authType, events: user.calEvents, fullName: user.fullName, empl: employee, user: patients, id: user.id});
+    }
+    else
+    {
+        res.json({role: authType,events: user.calEvents, fullName: user.fullName})
+    }
+})
 
 router.post("/reqUserEvents", async(req, res) => {
 
@@ -887,11 +890,174 @@ router.post("/reqUserEvents", async(req, res) => {
 
     //return the user's list of eventIDs
     let events = user.calEvents;
-    console.log("Authroutes Events: ------------------------\n", events);
+    //console.log("Authroutes Events: ------------------------\n", events);
     res.json({events: events});
 
 });
 
 
+router.post('/addEventUsers', async(req, res) => {
 
-export default router
+    const { userIDs, eventID } = req.body;
+
+    try {
+
+        //Correctly adds the eventID to the users' database entry
+        const updateUsers = await prisma.user.updateMany({
+            where: {
+                id: {in: userIDs }
+            },
+            data: { calEvents: {push: String(eventID)} },
+        });
+
+    } catch(err) {
+        console.log(err);
+    }
+});
+
+router.post('/updateEventUsers', async(req, res) => {
+
+    const { userIDs, eventID } = req.body;
+
+    try {
+        //find users with the event currently.
+
+        const foundUsers = await prisma.user.findMany({
+            where: {
+                has: eventID
+            }
+        });
+
+        for(var user in foundUsers)
+        {
+            var eventsUpdate = user.calEvents;
+            console.log(eventsUpdate);
+        }
+
+        //Correctly adds the eventID to the users' database entry
+        const updateUsers = await prisma.user.updateMany({
+            where: {
+                id: {in: userIDs }
+            },
+            data: { calEvents: {push: String(eventID)} },
+        });
+
+    } catch(err) {
+        console.log(err);
+    }
+
+
+})
+
+router.post('/removeEventUser', async(req, res) => {
+
+
+
+    var findEventID = req.body.eventID;
+    var eventUsers = [ req.body.caregiver, req.body.patient];
+    var adminID = req.body.admin;
+    try {
+        //find users with the event currently.
+        var eventUsers = [ req.body.caregiver, req.body.patient];
+        const foundUsers = await prisma.user.findMany({
+            where: {
+                fullName: {in: eventUsers }
+            },
+        });
+
+        const foundAdmin = await prisma.user.findUnique({
+            where: {
+                id: adminID
+            },
+        });
+        eventUsers.push(foundAdmin.fullName);
+
+        console.log(findEventID);
+
+        function matchValue(testVal) {
+            return testVal != findEventID;
+        }
+
+        var fullArray = foundUsers.concat(foundAdmin);
+
+        console.log(fullArray);
+        for(var i = 0; i < fullArray.length; i++)
+        {
+            var userEventList = fullArray[i].calEvents;
+            var newEventsList = userEventList.filter(matchValue);
+
+            const updatedUsers = await prisma.user.updateMany({
+                where: {
+                    fullName: {in: eventUsers }
+                },
+                data: { calEvents: newEventsList },
+            });
+
+            console.log(updatedUsers[0].calEvents);
+        }
+
+
+        /*
+        //Correctly adds the eventID to the users' database entry
+        const updateUsers = await prisma.user.updateMany({
+            where: {
+                id: {in: userIDs }
+            },
+            data: { calEvents: {push: String(eventID)} },
+        });
+    */
+
+    } catch(err) {
+        console.log(err);
+    }
+
+
+})
+
+
+
+router.post('/getUserList', async(req, res) => {
+
+    const { requestingUserID } = req.body;
+
+
+    try{
+
+        const userStatus = await prisma.user.findUnique({
+            where: {
+                id: requestingUserID,
+            }
+        });
+
+        if(requestingUserID.role === "EMPLOYEE")
+        {
+            const patients = await prisma.user.findMany({
+                where: {
+                    role: "PATIENT"
+                }
+            });
+
+            const employee = await prisma.user.findMany({
+                where: {
+                    role: "EMPLOYEE"
+                },
+            });
+
+            res.json({ empl: employee, user: patients});
+        }
+        else
+        {
+            res.json({});
+        }
+
+
+
+    } catch(err) {
+        console.log(err);
+    }
+
+})
+
+
+
+export default router;
