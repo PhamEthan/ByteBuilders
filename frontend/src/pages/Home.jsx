@@ -1,7 +1,10 @@
 import "../css/Home.css";
 import missionImg from "../assets/mission.jpeg"
+import RequestForms from "../Components/RequestForms";
+import { useNavigate } from "react-router-dom";
 
 function Home() {
+  const navigate=useNavigate();
   return (
     <div className="home">
       <section className="home-hero">
@@ -13,10 +16,9 @@ function Home() {
             We provide dependable in-home caregiving support designed to help
             clients feel comfortable, respected, and cared for every day
           </p>
-
-          <div className="hero-buttons">
-            <button className="home-btn primary">Book a Consultation</button>
-            <button className="home-btn primary">Contact Us</button>
+          
+          <div className="home-request-forms">
+            <RequestForms/>
           </div>
         </div>
       </section>
@@ -57,7 +59,9 @@ function Home() {
             helping individuals remain safe and comfortable at home while giving
             families reassurance that their loved ones are in caring hands.
           </p>
-          <button className="home-btn primary">Learn More About Us</button>
+          <button className="home-btn primary" onClick={() => navigate("/about")}>
+            Learn More About Us
+          </button>
         </div>
 
         <div className="feature-image">
@@ -113,8 +117,9 @@ function Home() {
             consultation.
           </p>
           <div className="cta-buttons">
-            <button className="home-btn primary">Book a Consultation</button>
-            <button className="home-btn secondary">Get in Touch</button>
+            <RequestForms
+              contactBtnTxt="Get In Touch"  
+            />
           </div>
         </div>
       </section>

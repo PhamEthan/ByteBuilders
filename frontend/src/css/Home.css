@@ -100,14 +100,15 @@
     grid-template-columns: repeat(3, 1fr);
     gap: 1.5rem;
     position: relative;
-    z-index: 3;
+    z-index: 1;
 }
 
 .intro-card {
-    background: white;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
     border-radius: 20px;
     padding: 2rem 1.5rem;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    box-shadow: var(--card-shadow);
     text-align: center;
 }
 
@@ -119,7 +120,7 @@
 }
 
 .intro-card p {
-    color: var(--primary-text);
+    color: var(--card-text);
     line-height: 1.6;
 }
 
@@ -183,8 +184,8 @@
 }
 
 .service-card {
-    background: rgba(243, 26, 134, 0.06);
-    border: 1px solid rgba(243, 134, 188, 0.14);
+    background: var(--service-section-bg);
+    border: 1px solid var(--service-section-border);
     border-radius: 18px;
     padding: 1.75rem;
 }
@@ -230,6 +231,9 @@
     margin: 0 auto 2rem;
 }
 
+.home-request-forms {
+    z-index: 99999;
+}
 
 @media (max-width: 900px) {
     .home-hero h1 {
