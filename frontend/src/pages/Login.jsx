@@ -6,7 +6,6 @@ import { useState } from "react"
 
 
 // ===== GLOBAL STATE =====
-let token = localStorage.getItem('token') || null
 let isAuthenticating = false
 
 const apiBase = 'http://localhost:5003/'

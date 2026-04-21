@@ -23,7 +23,7 @@ function Calendar(){
     const [location, setLocation] = useState("");
     const [selectedEvent, setSelectedEvent] = useState(null);
     const [isEditing, setIsEditing] = useState(false);
-    const [eventID, setEventID] = useState("");
+    //const [eventID, setEventID] = useState("");
     const [eventEmployee, setEventEmployee] = useState("");
     const [eventUser, setEventUser] = useState("");
 
@@ -52,11 +52,14 @@ function Calendar(){
 
     const [error, setError] = useState("");
 
+
+    /*
     const clickDate = (info) => {
         console.log("date clicked", info.dateStr);
         SetselectedDate(info.dateStr);
         setIsPopupOpen(true);
     };
+    */
 
     const handleSelect = (info) => {
         console.log("Selected: ", info.startStr, info.endStr);
@@ -82,7 +85,7 @@ function Calendar(){
             setError("No date or event selected");
             return;
         }
-
+        var requestMade = false;
         if (isEditing && selectedEvent) {   //if we selected this event and we're in edit mode
             setEvents((prevEvents) => {             //pass  previous events from state
                 return prevEvents.map(event => {        //create new arr of events by looping thru each event, looking for this event
@@ -91,13 +94,109 @@ function Calendar(){
 
 
 
-                        (async () => {
-                            var eventID = event.id;
 
-                            requestUpdateEvent(eventEmployee, eventUser, title,  location, description, startTime, endTime, eventID);
+                    if(requestMade === false)
+                    {
+                        (async () => {
+
+                            // Caregiver / Patient variables:
+                            var curPatient = event.extendedProps.patient;
+                            var curCaregiver = event.extendedProps.caregiver;
+                            var newPatient = patientName;
+                            var newCaregiver = caregiverName;
+
+
+
+
+
+                            //All other event attributes:
+                            var newDescription = newCaregiver + "-" + newPatient + "=" + description;
+                            newDescription = newDescription.toString();
+
+
+
+
+                            var formattedStart = new Date(selectedEvent.end);
+                            var modifiedStart = parseInt(eventStartHour);
+                            if(eventStartAMPM === "PM")
+                            {
+                                //Adjust by 12 hours if in the evening, to account for AM/PM for ISO time conversion
+                                modifiedStart += 12;
+                            }
+                            formattedStart.setHours(modifiedStart);
+                            formattedStart.setMinutes(eventStartMinute);
+
+                            var startISO = formattedStart.toISOString();
+
+
+                            //Time and date Formatting.
+                            var formattedEnd = new Date(selectedEvent.end);
+                            var modifiedEnd = parseInt(eventEndHour);
+                            if(eventEndAMPM === "PM")
+                            {
+                                //Adjust by 12 hours if in the evening, to account for AM/PM for ISO time conversion
+                                modifiedEnd += 12;
+                            }
+
+                            //If the event starts on one day, and ends the next day, the date rolls over to the next day.
+                            if(eventStartAMPM === "PM" && eventEndAMPM === "AM")
+                            {
+                                formattedEnd.setDate(formattedEnd.getDate() + 1);
+                            }
+
+                            formattedEnd.setHours(modifiedEnd);
+                            formattedEnd.setMinutes(eventEndMinute);
+
+                            var endISO = formattedEnd.toISOString();
+
+                            console.log("Selected Start Time: ", formattedStart);
+                            console.log("Selected End Time: ", formattedEnd);
+
+                            setStartTime(startISO);
+                            setEndTime(endISO);
+
+
+
+
+                            // Update request
+                            requestUpdateEvent(curCaregiver, curPatient, newCaregiver, newPatient, title,  location, newDescription, startISO, endTime, endISO);
+
+                            var filledEvents = events;
+                            console.log("Filled Events1: ",filledEvents);
+
+
+                            var start = startISO.dateTime;
+                            var end = endISO.dateTime;
+
+                            filledEvents.push({
+                                id: event.id,
+                                title: title,
+                                start: start,
+                                end: end,
+                                allDay:false,
+                                extendedProps: {
+                                    location: location,
+                                    description: newDescription,
+                                    caregiver: newCaregiver,
+                                    patient: newPatient,
+                                }
+
+                            });
+                            setEvents(filledEvents);
+                            console.log("Filled Events2: ",filledEvents);
+
+                            requestMade = true;
                         })()
 
 
+
+
+
+                    }
+
+
+
+                        /*
                         return {                
                             ...event,                   //if found, copy all event properties, replace title and description.... 
                             title:title,                        //....with updated value
@@ -106,6 +205,7 @@ function Calendar(){
                                 description:description
                             }
                         }
+                        */
                     }
 
                     return event;                       //if NOT this event, return events in arr w/o modifying, continue
@@ -113,7 +213,7 @@ function Calendar(){
             
             
             })
-            //Send request to appointmentRoutes to create
+
 
 
 
@@ -136,7 +236,7 @@ function Calendar(){
 
             var formattedStart = new Date(selectedDate.end);
             var modifiedStart = parseInt(eventStartHour);
-            if(eventStartAMPM == "PM")
+            if(eventStartAMPM === "PM")
             {
                 //Adjust by 12 hours if in the evening, to account for AM/PM for ISO time conversion
                 modifiedStart += 12;
@@ -150,7 +250,7 @@ function Calendar(){
 
             var formattedEnd = new Date(selectedDate.end);
             var modifiedEnd = parseInt(eventEndHour);
-            if(eventEndAMPM == "PM")
+            if(eventEndAMPM === "PM")
             {
                 //Adjust by 12 hours if in the evening, to account for AM/PM for ISO time conversion
                 modifiedEnd += 12;
@@ -173,6 +273,9 @@ function Calendar(){
             setStartTime(startISO);
             setEndTime(endISO);
 
+            var start = startISO.dateTime;
+            var end = endISO.dateTime;
+
 
             (async () => {
                 var comboDescription = caregiverName + "-" + patientName + "=" + description;
@@ -180,6 +283,32 @@ function Calendar(){
                 console.log(comboDescription);
                 var newID = await requestAddEvent(eventEmployee, eventUser, startISO, endISO, title, comboDescription, location, curUserID);
 
+
+
+                 var filledEvents = events;
+                 console.log("Filled Events1: ",filledEvents);
+
+                 filledEvents.push({
+                     id: newID,
+                     title: title,
+                     start: start,
+                     end: end,
+                     allDay:false,
+                     extendedProps: {
+                         location: location,
+                         description: comboDescription,
+                         caregiver: caregiverName,
+                         patient: patientName,
+                     }
+
+                 });
+                 setEvents(filledEvents);
+                 console.log("Filled Events2: ",filledEvents);
+                 console.log("events check: ", events);
+
+
+
+                /*
                 setEvents((prevEvents) => [
                     ...prevEvents,          //previous events, add new event to it
                     {
@@ -198,7 +327,9 @@ function Calendar(){
                           }
 
                     }
+
                 ]);
+                */
 
             })()
 
@@ -325,7 +456,7 @@ function Calendar(){
 
         setSelectedEvent(event);
         setTitle(event.title);
-        setEventID(event.id);
+        //setEventID(event.id);
         console.log(event.id);
         setLocation(event.extendedProps.location);
         setDescription(event.extendedProps.description || "");
@@ -344,7 +475,7 @@ function Calendar(){
         setTitle("");
         setDescription("");
         setLocation("");
-        setEventID("");
+        //setEventID("");
         setError("");
         setSelectedEvent(null);
         setIsEditing(false);
@@ -354,6 +485,7 @@ function Calendar(){
 
     function handleEmployeeSelect(e)
     {
+
         //Recieves the value as a string with a comma. The values are then split.
         //console.log("Selected Employee: ", e.target.value);
         const emplSel = e.target.value.split(",");
@@ -364,6 +496,7 @@ function Calendar(){
 
     function handleUserSelect(e)
     {
+
         //console.log("Selected User: ", e.target.value);
         const userSel = e.target.value.split(",");
         setEventUser(userSel[0]);
@@ -415,7 +548,7 @@ function Calendar(){
     function displayEvents(eventsResponse)
     {
 
-        var filledEvents = new Array();
+        var filledEvents = [];
         for (const index in eventsResponse)
         {
             var newTitle = eventsResponse[index].summary;
@@ -486,7 +619,7 @@ function Calendar(){
     setIsAuth(true);
     }
 
-    if(role != null && eventsFulfilled == false)
+    if(role != null && eventsFulfilled === false)
     {
 
         (async () => {
@@ -502,7 +635,7 @@ function Calendar(){
     setEventsFulfilled(true);
     }
 
-    if(eventsFulfilled == true)
+    if(eventsFulfilled === true)
     {
         return (
 
@@ -764,7 +897,7 @@ function Calendar(){
 
 
                 {/* Display for patients, or employees that arent editing it.*/}
-                { (role == "PATIENT" || !isEditing) &&
+                { (role === "PATIENT" || !isEditing) &&
                     <div>
                     <div className = "form-section">
                     <label htmlFor="event-patient">Title</label>
@@ -923,8 +1056,6 @@ async function authenticate() {
 async function requestAddEvent(employeeID, userID, startTime, endTime, title, description, location, adminID)
 {
 
-    var timeZone = 'America/Chicago';
-
     var eventID;
 
     try {
@@ -935,7 +1066,7 @@ async function requestAddEvent(employeeID, userID, startTime, endTime, title, de
         });
         const data = await res.json();
         //console.log(res.body); //= res.body.eventID;
-        var eventID = data.eventID;
+        eventID = data.eventID;
         //console.log("eventID: ", eventID);
 
         if(res.ok)
@@ -952,6 +1083,12 @@ async function requestAddEvent(employeeID, userID, startTime, endTime, title, de
                 body: JSON.stringify({ userIDs: userIDs, eventID: eventID })
             });
 
+
+            if(res2.ok)
+            {
+                console.log("Successfully created Event.");
+            }
+
         }
 
 
@@ -962,48 +1099,33 @@ async function requestAddEvent(employeeID, userID, startTime, endTime, title, de
 }
 
 
-async function requestUpdateEvent(employeeID, userID, title,  location, description, newStart, newEnd, eventID)
+async function requestUpdateEvent(caregiver, patient, newCaregiver, newPatient, title, location, description, newStart, newEnd, eventID)
 {
-    //Check if employee and user ID are the same as before, before making the request, so that they can be removed or added as needed.
 
     try {
+        /*
         let res = await fetch(apiBase + 'appointments/updateEvent', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ title: title, location: location, description: description, newStart: newStart, newEnd: newEnd, eventID: eventID}),
         });
+        */
 
-        if(res.ok)
+        console.log("Current: ", caregiver, patient);
+        console.log("new: ", newCaregiver, newPatient);
+        //Update users with the event ID, removing or adding as needed.
+        //eventID = res.body; //= res.body.eventID;
+        //get the returned eventID, and make a request to add it to the emmployee and user DB entries.
+        let res2 = await fetch(apiBase + 'auth/updateEventUsers', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ eventID: eventID, caregiver: caregiver, patient: patient, newCaregiver: newCaregiver, newPatient: newPatient })
+        });
+
+        if(res2.ok)
         {
-
-            //Update users with the event ID, removing or adding as needed.
-            eventID = res.body; //= res.body.eventID;
-            //get the returned eventID, and make a request to add it to the emmployee and user DB entries.
-
-            let userIDs = [parseInt(employeeID), parseInt(userID)];
-            let res2 = await fetch(apiBase + 'auth/updateEventUsers', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userIDs: userIDs, eventID: eventID })
-            });
-            const data = await res.json().catch(() => ({}))
-            if(res.ok)
-            {
-
-            }
-            else
-            {
-                throw new Error(data.message || 'Failed to add eventID to the given users');
-            }
-
-
-
+            console.log("Successfully Updated Event.");
         }
-        else
-        {
-            //throw new Error(data.message || 'Failed to add the event to google calendar');
-        }
-
 
     } catch (err) {
         console.log(err);
@@ -1019,13 +1141,18 @@ async function requestDeleteEvent(eventID, caregiverName, patientName, adminID)
 {
     let res;
     try {
-        /*
+
         res = await fetch(apiBase + 'appointments/deleteEvent', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ eventID: eventID}),
         });
-        */
+
+        if(res.ok)
+        {
+            console.log("Successfully deleted google Event.");
+        }
+
 
 
         console.log("Deleted event: ", eventID);
@@ -1036,10 +1163,9 @@ async function requestDeleteEvent(eventID, caregiverName, patientName, adminID)
             body: JSON.stringify({ eventID: eventID, caregiver: caregiverName, patient: patientName, admin: adminID })
         });
 
-        if(res.ok)
+        if(res2.ok)
         {
-
-
+            console.log("Successfully removed users from event.");
         }
 
 
@@ -1059,6 +1185,7 @@ async function populateEvents(eventList)
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ eventList: eventList }),
         });
+
         const data = await res.json();
         var googleEvents = data.outputList;
         console.log("Found User Google Events");
@@ -1070,6 +1197,7 @@ async function populateEvents(eventList)
     }
 
 }
+
 
 
 export default Calendar;

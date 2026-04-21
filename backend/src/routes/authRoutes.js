@@ -5,7 +5,7 @@ import prisma from '../prismaClient.js'
 import { google } from 'googleapis'
 import crypto from "crypto"
 import nodemailer from 'nodemailer';
-import dotenv from 'dotenv';
+
 const router = express.Router()
 
 import cookieParser from 'cookie-parser';
@@ -917,41 +917,66 @@ router.post('/addEventUsers', async(req, res) => {
 
 router.post('/updateEventUsers', async(req, res) => {
 
-    const { userIDs, eventID } = req.body;
+
+    var findEventID = req.body.eventID;
+    var curEventUsers = [ req.body.caregiver, req.body.patient];
+    var newEventUsers = [ req.body.newCaregiver, req.body.newPatient];
+
+    console.log("Cur Users Debug:", curEventUsers);
+    console.log("New Users Debug:", newEventUsers);
 
     try {
-        //find users with the event currently.
-
+        //find users with the event currently, and remove them.
         const foundUsers = await prisma.user.findMany({
             where: {
-                has: eventID
-            }
+                fullName: {in: curEventUsers }
+            },
         });
 
-        for(var user in foundUsers)
-        {
-            var eventsUpdate = user.calEvents;
-            console.log(eventsUpdate);
+
+        //console.log(findEventID);
+
+        function matchValue(testVal) {
+            return testVal != findEventID;
         }
 
-        //Correctly adds the eventID to the users' database entry
-        const updateUsers = await prisma.user.updateMany({
+        console.log(foundUsers);
+        for(var i = 0; i < foundUsers.length; i++)
+        {
+            var userEventList = foundUsers[i].calEvents;
+            var newEventsList = userEventList.filter(matchValue);
+
+            const updatedUsers = await prisma.user.updateMany({
+                where: {
+                    fullName: {in: curEventUsers }
+                },
+                data: { calEvents: newEventsList },
+            });
+
+            console.log(updatedUsers);
+        }
+
+
+        //TODO: FIx this calling twice for some reason!
+
+        //Then next, add the event to the selected users.
+        const updateEventUsers = await prisma.user.updateMany({
             where: {
-                id: {in: userIDs }
+                fullName: {in: newEventUsers }
             },
-            data: { calEvents: {push: String(eventID)} },
+            data: { calEvents: {push: String(findEventID)} },
         });
+
+        console.log("Updated Users: ", updateEventUsers);
+
 
     } catch(err) {
         console.log(err);
     }
 
-
 })
 
 router.post('/removeEventUser', async(req, res) => {
-
-
 
     var findEventID = req.body.eventID;
     var eventUsers = [ req.body.caregiver, req.body.patient];
@@ -965,22 +990,31 @@ router.post('/removeEventUser', async(req, res) => {
             },
         });
 
+        //Finds the admin entry, using the ID of the admin associated with deleting the event.
         const foundAdmin = await prisma.user.findUnique({
             where: {
                 id: adminID
             },
         });
-        eventUsers.push(foundAdmin.fullName);
+        //Adds them to the full list of event users found. (Caregiver, Patient, Admin)
+        //eventUsers.push(foundAdmin.fullName);
+        var fullArray = foundUsers.concat(foundAdmin);
 
-        console.log(findEventID);
 
+        //Debugging log
+        //console.log(findEventID);
+
+
+        //Function that matches anything that is NOT a match to the passed value (findEventID);
         function matchValue(testVal) {
             return testVal != findEventID;
         }
 
-        var fullArray = foundUsers.concat(foundAdmin);
 
-        console.log(fullArray);
+
+
+        //console.log(fullArray);
+        //Iterates through the list of associated users, filtering the eventsList to contain all events EXCEPT the one we're deleting, before passing the new array as an argument to replace the original array of events on each user DB entry.
         for(var i = 0; i < fullArray.length; i++)
         {
             var userEventList = fullArray[i].calEvents;
@@ -995,18 +1029,6 @@ router.post('/removeEventUser', async(req, res) => {
 
             console.log(updatedUsers[0].calEvents);
         }
-
-
-        /*
-        //Correctly adds the eventID to the users' database entry
-        const updateUsers = await prisma.user.updateMany({
-            where: {
-                id: {in: userIDs }
-            },
-            data: { calEvents: {push: String(eventID)} },
-        });
-    */
-
     } catch(err) {
         console.log(err);
     }

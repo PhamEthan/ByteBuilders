@@ -5,7 +5,7 @@ import authMiddleware from '../middleware/authMiddleware.js'
 
 const router = express.Router()
 
-const apiBase = 'http://localhost:5003/'
+
 const calendarID = '77c1654de204e04f575eacfa0e066b745c1e640154a35336ce3ba7877501f056@group.calendar.google.com';
 
 
@@ -93,7 +93,6 @@ router.post('/updateEvent', async(req, res)=> {
 });
 
 
-
 //Handles creating a new event.
 router.post('/newEvent', async(req,res) => {
   console.log("Trying to create new Event...");
@@ -175,17 +174,6 @@ router.post('/getUserEvents', async (req,res) => {
 
   //request database entries for events for user:
   try{
-    /*
-    let eventRes = await fetch(apiBase + 'auth/reqUserEvents' , {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userID: userID }),
-    });
-    const data = await eventRes.json();
-    console.log("apptRoutes Events: ------------------------\n", data.events);
-    */
-
-    //var eventList = data.events;
 
     var outputList = [];
     var eventLen = eventList.length;
