@@ -1,20 +1,25 @@
 import "../css/About.css"
 import caregiverImg from "../assets/caregiver.JPG"
-import missionImg from "../assets/mission.jpeg"
+
 import walkImg from "../assets/walk.jpg"
+import logo from "../assets/becausewecare_logo.jpg"
+import {useEffect} from "react"
+import RequestForms from "../Components/RequestForms"
 
 function About(){
-    return <div className="about">
+    useEffect(() => {
+        window.scrollTo({top: 0, behavior:"smooth"})
+    }, [])
+
+    return (<div className="about">
        
         <div className="hero">
             <div className="hero-content">
                 <div className="hero-title">
                     <h1>About Because We Care</h1>
                 </div>
-                <div className="hero-buttons">
-                    <button className="hero-btn primary">Book a Consultation</button>
-                    <button className="hero-btn primary">Contact Us</button>
-                </div>
+                    <RequestForms/>
+            
             </div>
         </div>
         <section className="about-section">
@@ -32,12 +37,12 @@ function About(){
             </p>
             </div>
             <div className="about-media">
-                <img src={missionImg} alt="Caregiver with patient"/>
+                <img src={logo} alt="Logo: a pink bird rising up from open palms"/>
             </div>
         </section>
         <section className="about-section">
             <div className="about-media alt">
-                <img src={caregiverImg} alt="Staff standing together"/>
+                <img src={caregiverImg} alt="A caregiver sitting besides a client engaging in conversation"/>
             </div>
             <div className="about-content">
                 <h2>Services</h2>
@@ -66,10 +71,11 @@ function About(){
                 </p>
             </div>
             <div className="about-media">
-                <img src={walkImg} alt="Staff walking at alzheimers fundraiser walk"/>
+                <img src={walkImg} alt="Staff standing behind a sign that says Welcome to Walk 2 End Alz, an alzheimers fundraiser"/>
             </div>
         </section>
     </div>
+    )
 }
 
 export default About;

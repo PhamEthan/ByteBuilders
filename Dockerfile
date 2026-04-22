@@ -1,25 +1,20 @@
-# 
 FROM node:22-alpine
 
-# Set Working Directory
 WORKDIR /app
 
-# Copy Packages
-COPY package*.json .
+# Copy package files
+COPY package*.json ./
 
-# Install Dependencies for Project
+# Copy prisma schema + migrations
+COPY prisma ./prisma
+
+# Install dependencies
 RUN npm install
 
-# Copy Rest of App Code
-COPY . . 
+# Copy rest of app
+COPY . .
 
-#Expose the Port in order to make app public
 EXPOSE 5003
 
-#Define the Run Command for App
-CMD ["node", "-r", "dotenv/config", "./src/server.js"]
-
-
-
-
-
+# Run migrations, then start server
+CMD ["sh", "-c", "npx prisma migrate deploy && node ./src/server.js"]

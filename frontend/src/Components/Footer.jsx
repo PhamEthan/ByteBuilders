@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { FaFacebookF } from 'react-icons/fa'
 import '../css/Footer.css';
 
 function Footer() {
@@ -14,9 +15,15 @@ function Footer() {
                     <Link to="/employee" className="footer-link">Employee Login</Link>
                 </div>
                 <div className="footer-socials">
-                    <button className="social-icon" aria-label="Instagram">*</button>
-                    <button className="social-icon" aria-label="LinkedIn">*</button>
-                    <button className="social-icon" aria-label="Twitter">𝕏</button>
+                    <a 
+                        href='https://www.facebook.com/profile.php?id=61581488677863'
+                        target='_blank'
+                        rel='noreferrer'
+                        className='social-icon'
+                        aria-label='Facebook'
+                    >
+                        <FaFacebookF/>
+                    </a>
                 </div>
             </div>
         </footer>

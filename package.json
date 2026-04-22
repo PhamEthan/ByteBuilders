@@ -6,6 +6,9 @@
   "type": "module",
   "scripts": {
     "dev": "node --watch -r dotenv/config ./src/server.js",
+    "start": "node ./src/server.js",
+    "postinstall": "prisma generate",
+    "build": "prisma migrate deploy",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
