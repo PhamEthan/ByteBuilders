@@ -9,6 +9,8 @@ import { useState } from "react";
 const apiBase = 'http://localhost:5003/'
 
 
+
+
 const hours = [ "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"];
 const minutes = [ "00", "05", "10", "15","20", "25","30", "35","40", "45","50", "55"];
 const AMPM = ["PM", "AM"];
@@ -159,7 +161,7 @@ function Calendar(){
 
 
                             // Update request
-                            requestUpdateEvent(curCaregiver, curPatient, newCaregiver, newPatient, title,  location, newDescription, startISO, endTime, endISO);
+                            requestUpdateEvent(curCaregiver, curPatient, newCaregiver, newPatient, title,  location, newDescription, startISO, endISO, event.id);
 
                             var filledEvents = events;
                             console.log("Filled Events1: ",filledEvents);
@@ -196,16 +198,6 @@ function Calendar(){
 
 
 
-                        /*
-                        return {                
-                            ...event,                   //if found, copy all event properties, replace title and description.... 
-                            title:title,                        //....with updated value
-                            location: location,
-                            extendedProps: {
-                                description:description
-                            }
-                        }
-                        */
                     }
 
                     return event;                       //if NOT this event, return events in arr w/o modifying, continue
@@ -225,7 +217,7 @@ function Calendar(){
         }
 
         else{
-            //TODO: If the event didnt already exist, we send a request to appointment routes to create a new event, and return the entirety of the event's created info, so that it can be passed in below when creating our event object.
+            //If the event didnt already exist, we send a request to appointment routes to create a new event, and return the entirety of the event's created info, so that it can be passed in below when creating our event object.
             //This is so that they can share the same data, and so that our event object can have the eventID tied to it, in case we go in and edit/delete/update any data.
 
 
@@ -307,30 +299,6 @@ function Calendar(){
                  console.log("events check: ", events);
 
 
-
-                /*
-                setEvents((prevEvents) => [
-                    ...prevEvents,          //previous events, add new event to it
-                    {
-                        //TEMP ID CHANGE LATER!!!!!!!!!!!
-                        id: newID,
-
-                          title: title,
-
-                          start: selectedDate.start,
-                          end: selectedDate.end,
-                          allDay:false,
-                          extendedProps: {
-                              location: location,
-                              description: comboDescription
-
-                          }
-
-                    }
-
-                ]);
-                */
-
             })()
 
 
@@ -343,7 +311,6 @@ function Calendar(){
 
 
     const deleteEvent = () => {
-        //TODO: Somewhere in here, we'll call the function to delete the event via google calendar.
         if (!selectedEvent){return};
 
 
@@ -362,7 +329,6 @@ function Calendar(){
             }); 
         });
 
-        //Somewhere in here, we'll call the function to delete the event via google calendar.
 
         resetForm();
         setIsPopupOpen(false);
@@ -597,7 +563,6 @@ function Calendar(){
         setEventsFulfilled(false);
         setRole(null);
         (async () => {
-            console.log("Authenticate Async");
             var dataPacket = await authenticate();
             setRole(dataPacket[0]);
 
@@ -609,6 +574,7 @@ function Calendar(){
                 setUsers(dataPacket[4]);
                 setCurUserID(dataPacket[5]);
             }
+
             else
             {
                 //Redirect to login
@@ -640,7 +606,6 @@ function Calendar(){
         return (
 
 
-            //TODO: Inside here, we'll wanna add new code to add extra fields for selecting time, employee, user, etc. to ensure that all the data we need is initialized before calling any function to add, edit, update or delete the selected event.
 
             <div className="calendar-container">
             <FullCalendar
@@ -1017,7 +982,6 @@ function Calendar(){
 
 async function authenticate() {
 
-
     let res = await fetch(apiBase + 'auth/authenticateUser', {
         credentials: 'include',
         method: 'POST',
@@ -1027,7 +991,6 @@ async function authenticate() {
 
         const data = await res.json();
         //Returns the authenticated cookie data as debug data.
-        console.log("Logged in as: ", data.role);
         console.log("getting calendar events...");
 
 
@@ -1039,7 +1002,6 @@ async function authenticate() {
             var employees = data.empl;
             var users = data.user;
             var adminID = data.id;
-            console.log("Logged in as: ", data.id);
             return [role, events, name, employees, users, adminID];
         }
         else
@@ -1103,13 +1065,13 @@ async function requestUpdateEvent(caregiver, patient, newCaregiver, newPatient, 
 {
 
     try {
-        /*
+
         let res = await fetch(apiBase + 'appointments/updateEvent', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ title: title, location: location, description: description, newStart: newStart, newEnd: newEnd, eventID: eventID}),
         });
-        */
+
 
         console.log("Current: ", caregiver, patient);
         console.log("new: ", newCaregiver, newPatient);

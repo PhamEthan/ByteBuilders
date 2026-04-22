@@ -177,37 +177,6 @@ router.post('/register', async (req, res) => {
 })
 
 
-/*  OLD Register Code (Uses username and hashed password)
-router.post('/register', async (req, res) => {
-    const { username, password } = req.body
-    // save user name and encrypted password
-    // save email@gmail.com | wadawfawfawf.awfafawfa.wf
-
-    //encrypt password
-    const hashedPassword = bcrypt.hashSync(password, 8)
-
-    // save new user and password into DB
-    try{
-        const user = await prisma.user.create({
-            data: {
-                username,
-                password: hashedPassword
-            }
-        })
-        // Since User is Created Temp Create First Appointment
-
-        // Token Creation
-        const token = jwt.sign({id: user.id}, process.env.
-        JWT_SECRET, { expiresIn: '24h'})
-        return res.status(201).json({token})
-
-    } catch (error) {
-        console.log(error.message)
-        return res.sendStatus(503)
-    }
-})
-*/
-
 
 
 router.post('/login', async(req, res) => {
@@ -216,13 +185,9 @@ router.post('/login', async(req, res) => {
 
     const {username, password} = req.body
 
-
-
-
-
     try {
         console.log("attempting user login")
-       const user = await prisma.user.findUnique({
+        const user = await prisma.user.findUnique({
             where: {
                 username: username
             }
@@ -235,17 +200,30 @@ router.post('/login', async(req, res) => {
 
         // All Checks Passed
         const token = jwt.sign({ id: user.id}, process.env.JWT_SECRET, {expiresIn: '24h'})
-        res.cookie('authcookie', token, {
+        var cookieName = 'authcookie';
+        res.cookie(cookieName, token, {
             httpOnly: true,
             secure: true,
             SameSite: "None",
         });
-        res.json({token})
+        res.json({token: token, name: user.fullName})
     } catch (err) {
         console.log(err.message)
         res.sendStatus(503)
     }
 })
+
+router.post('/logout', async(req, res) => {
+
+    //responds to the request with a clearCookie signal, deleting the user's auth cookie.
+    res.clearCookie('authcookie', {
+        httpOnly: true,
+        secure: true,
+        SameSite: "None",
+    }).send();
+
+});
+
 
 
 
@@ -831,8 +809,6 @@ router.post("/verifyAcc", async(req, res) => {
 });
 
 
-
-
 router.post('/authenticateUser', async(req, res) => {
     const cookieToken = req.cookies.authcookie;
     if(!cookieToken) console.log("invalid cookie");
@@ -898,11 +874,13 @@ router.post("/reqUserEvents", async(req, res) => {
 
 router.post('/addEventUsers', async(req, res) => {
 
+
+    //Adds the event to the "calEvents" db field on eahc of the declared users in userIDs
     const { userIDs, eventID } = req.body;
 
     try {
 
-        //Correctly adds the eventID to the users' database entry
+        //Adds the eventID to the users' database entry
         const updateUsers = await prisma.user.updateMany({
             where: {
                 id: {in: userIDs }
@@ -916,6 +894,11 @@ router.post('/addEventUsers', async(req, res) => {
 });
 
 router.post('/updateEventUsers', async(req, res) => {
+
+    //Removes the eventID from each current user's "calEvents" field.
+    //Then adds it to each of the "newEventUsers" "calEvents" field.
+
+    //Not the most elegant solution, but it works!
 
 
     var findEventID = req.body.eventID;
@@ -955,9 +938,6 @@ router.post('/updateEventUsers', async(req, res) => {
 
             console.log(updatedUsers);
         }
-
-
-        //TODO: FIx this calling twice for some reason!
 
         //Then next, add the event to the selected users.
         const updateEventUsers = await prisma.user.updateMany({
@@ -1034,51 +1014,39 @@ router.post('/removeEventUser', async(req, res) => {
     }
 
 
-})
+});
 
+router.post('/getName', async (req, res)=> {
 
-
-router.post('/getUserList', async(req, res) => {
-
-    const { requestingUserID } = req.body;
-
-
-    try{
-
-        const userStatus = await prisma.user.findUnique({
-            where: {
-                id: requestingUserID,
-            }
+    const cookieToken = req.cookies.authcookie;
+    if(!cookieToken)
+    {
+        console.log("invalid cookie");
+        var name = "";
+        res.json({name: name}).send();
+    }
+    if(cookieToken)
+    {
+        let userID;
+        jwt.verify(cookieToken, process.env.JWT_SECRET, (err, user) => {
+            if(err) return console.log("Error or invalid cookie");
+            // req.user = user;
+            console.log("Authenticated with cookie as user: ", user);
+            userID = user.id;
         });
 
-        if(requestingUserID.role === "EMPLOYEE")
-        {
-            const patients = await prisma.user.findMany({
-                where: {
-                    role: "PATIENT"
-                }
-            });
+        const user = await prisma.user.findUnique({
+            where: {
+                id: userID
+            },
+        });
 
-            const employee = await prisma.user.findMany({
-                where: {
-                    role: "EMPLOYEE"
-                },
-            });
-
-            res.json({ empl: employee, user: patients});
-        }
-        else
-        {
-            res.json({});
-        }
-
-
-
-    } catch(err) {
-        console.log(err);
+        var name = user.fullName;
+        res.json({name: name}).send();
     }
 
-})
+
+});
 
 
 

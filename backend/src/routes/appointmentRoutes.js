@@ -206,18 +206,6 @@ router.post('/getUserEvents', async (req,res) => {
     console.log(err);
   }
 
-
-
-  //Ask google calendar for the JSON info on those events:
-
-
-
-  //return array of events to the request:
-
-
-
-
-
 });
 
 

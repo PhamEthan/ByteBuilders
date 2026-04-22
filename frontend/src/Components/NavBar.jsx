@@ -1,7 +1,42 @@
 import {Link} from "react-router-dom";
 import "../css/NavBar.css"
 
+
 function NavBar({handleChange, isChecked}) {
+    return (
+        <nav classname="navbar">
+            <div className="navbar-container">
+                <div className="navbar-brand">
+                    <Link to ="/">Because We Care</Link>
+                </div>
+                <div className="navbar-links">
+                    <Link to ="/about" className="nav-link">About Us</Link>
+
+                    <Link to ="/login" className="nav-link">
+                        <button className="button">
+                            Log In
+                        </button>
+                    </Link>
+                    <div className="toggle-container">
+                        <input
+                            type="checkbox"
+                            id="check"
+                            className="toggle"
+                            onChange={handleChange}
+                            checked={isChecked}
+                        />
+                        <label htmlFor="check"></label>
+                    </div>
+                </div>
+
+            </div>
+
+        </nav>
+    );
+}
+
+function NavBarLoggedIn({handleChange, isChecked, curUser}) {
+    curUser = "Jarod Moore";
     return (
         <nav classname="navbar">
             <div className="navbar-container">
@@ -12,11 +47,14 @@ function NavBar({handleChange, isChecked}) {
                     <Link to ="/about" className="nav-link">About Us</Link>
                     <Link to ="/calendar" className="nav-link">Calendar</Link>
                     <Link to ="/fileviewer" className="nav-link">Files</Link>
-                    <Link to ="/login" className="nav-link">
+                    <div className="logoutBox">
+                    <p className="text-formatted" value={curUser}> {curUser} </p>
+                    <Link to ="/logout" className="nav-link">
                         <button className="button">
-                            Log In
+                            Log Out
                         </button>
                     </Link>
+                    </div>
                     <div className="toggle-container">
                             <input 
                                 type="checkbox" 
@@ -35,4 +73,4 @@ function NavBar({handleChange, isChecked}) {
     );
 }
 
-export default NavBar;
+export { NavBar as default, NavBarLoggedIn} ;

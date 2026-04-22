@@ -1,6 +1,7 @@
 import "../css/Login.css"
 import { useForm } from "react-hook-form"
 import {yupResolver} from '@hookform/resolvers/yup'
+import { Navigate } from 'react-router-dom';
 import * as yup from 'yup'
 import { useState } from "react"
 
@@ -10,12 +11,20 @@ let isAuthenticating = false
 
 const apiBase = 'http://localhost:5003/'
 
+var myUser;
+const curUser = myUser;
+
 function Login(){
+
+
 
 
     const [resetPassword, setResetPassword] = useState(false);
 
     const [isLogin, setIsLogin] = useState(true);
+
+    const [authenticated, setAuthenticated] = useState(false);
+
 
     const loginSchema = yup.object().shape({
         email: yup.string().email("Invalid format").required("Email is required"),
@@ -43,17 +52,18 @@ function Login(){
 
     //When submitting login or registration data, we (currently) output it to the console log for debugging, and then run an authentication call with the database server
     const onSubmit = (data) => {
-        //TODO: Remove this before deployment
-
 
         //calls to authenticate, to speak to the authentication middleware, to check against current entries in the database.
         if(!resetPassword)
         {
-            let res = authenticate(data.email, data.password, isLogin);
-            if(res.ok)
-            {
+            (async () => {
 
-            }
+                let name = await authenticate(data.email, data.password, isLogin);
+
+                myUser = name;
+                console.log(curUser);
+            })()
+
         }
         else
         {
@@ -205,6 +215,11 @@ async function authenticate(emailVal, passVal, isLogin) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username: emailVal, password: passVal })
             })
+            if(res.status === 201)
+            {
+                window.location.replace("/");
+            }
+
         } else {
             // login
             res = await fetch(apiBase + 'auth/login', {
@@ -213,18 +228,19 @@ async function authenticate(emailVal, passVal, isLogin) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username: emailVal, password: passVal })
             })
+            const data = await res.json();
+            if(data.name !== "")
+            {
+                window.location.replace("/");
+            }
         }
-
-        const data = await res.json().catch(() => ({}))
-
+/*
         if (!res.ok || !data.token) {
             throw new Error(data.message || 'Failed to authenticate.')
         }
+        */
 
 
-
-
-        //TODO: Add things here to output errors to the frontend, for users to see, instead of only showing it in the browser's console
     } catch (err) {
 
     } finally {
@@ -233,5 +249,19 @@ async function authenticate(emailVal, passVal, isLogin) {
 }
 
 
+async function getUserName()
+{
 
-export default Login;
+    let res = await fetch(apiBase + 'auth/getName', {
+        credentials: 'include',
+        method: 'POST',
+        header: { 'Content-Type' : 'application/json'},
+    });
+    const data = await res.json();
+    return data.name;
+
+}
+
+
+
+export {Login, getUserName};
