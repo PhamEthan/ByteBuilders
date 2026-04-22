@@ -13,11 +13,13 @@ import Checkin from "./pages/Checkin";
 import Schedule from "./pages/Schedule";
 import Notes from "./pages/Notes";
 import Verify from "./pages/Verify";
+import becausewecareLogo from "./assets/becausewecare_logo.jpg";
+import { UserProvider } from "./contexts/UserContext";
 
 
 import { Navigate } from 'react-router-dom';
 import { Routes, Route } from "react-router-dom";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 function App() {
   const [isDark, setDark] = useState(false);
@@ -27,8 +29,17 @@ function App() {
     setUserName(name);
   })()
 
+  useEffect(() => {
+    const existingIcon = document.querySelector("link[rel~='icon']");
+    const icon = existingIcon || document.createElement("link");
+    icon.rel = "icon";
+    icon.href = becausewecareLogo;
+    if (!existingIcon) document.head.appendChild(icon);
+  }, []);
+
   return (
-    <Routes>
+    <UserProvider>
+      <Routes>
 
 
       {/* Logged Out Routes WITH Navbar + Footer */}
@@ -59,13 +70,14 @@ function App() {
       }
 
 
-      {/* Employee Route WITHOUT Navbar + Footer */}
-      <Route path="/employee" element={<Employee />} />
-      <Route path="/checkin" element={<Checkin />} />
-      <Route path="/schedule" element={<Schedule />} />
-      <Route path="/notes" element={<Notes />} />
+        {/* Employee Route WITHOUT Navbar + Footer */}
+        <Route path="/employee" element={<Employee />} />
+        <Route path="/checkin" element={<Checkin />} />
+        <Route path="/schedule" element={<Schedule />} />
+        <Route path="/notes" element={<Notes />} />
 
-    </Routes>
+      </Routes>
+    </UserProvider>
   );
 }
 
