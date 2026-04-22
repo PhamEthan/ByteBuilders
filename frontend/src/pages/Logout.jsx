@@ -1,11 +1,4 @@
 import "../css/Logout.css"
-import { useForm } from "react-hook-form"
-import {yupResolver} from '@hookform/resolvers/yup'
-import * as yup from 'yup'
-import { useState } from "react"
-import {
-    useSearchParams
-} from "react-router-dom";
 
 // ===== GLOBAL STATE =====
 
@@ -32,6 +25,10 @@ async function logoutUser()
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
     });
+    if(res.status === 201)
+    {
+        window.location.replace("/");
+    }
 
 
 };

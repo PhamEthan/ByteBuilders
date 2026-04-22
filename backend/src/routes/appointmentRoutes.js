@@ -8,8 +8,6 @@ const router = express.Router()
 
 const calendarID = '77c1654de204e04f575eacfa0e066b745c1e640154a35336ce3ba7877501f056@group.calendar.google.com';
 
-
-
 // Google Auth set up
 const oauth2Client = new google.auth.OAuth2(
   process.env.CLIENT_ID,

@@ -220,7 +220,7 @@ router.post('/logout', async(req, res) => {
         httpOnly: true,
         secure: true,
         SameSite: "None",
-    }).send();
+    }).sendStatus(201);
 
 });
 

@@ -1,7 +1,6 @@
 import "../css/Login.css"
 import { useForm } from "react-hook-form"
 import {yupResolver} from '@hookform/resolvers/yup'
-import { Navigate } from 'react-router-dom';
 import * as yup from 'yup'
 import { useState } from "react"
 
@@ -9,29 +8,20 @@ const MAX_PASS_LEN = 20
 const MIN_PASS_LEN = 6
 const PASS_REQUIREMENTS = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).+$/
 
-//TODO: Clean up and reformat Forgot Password and user registration email HTML formatting
-//      Fix the button on the emails
-
-//TODO: Create 2FA email and logic
-
 // ===== GLOBAL STATE =====
 let isAuthenticating = false
 
 const apiBase = 'http://localhost:5003/'
 
-var myUser;
-const curUser = myUser;
 
 function Login(){
-
-
 
 
     const [resetPassword, setResetPassword] = useState(false);
 
     const [isLogin, setIsLogin] = useState(true);
 
-    const [authenticated, setAuthenticated] = useState(false);
+
 
 
     const loginSchema = yup.object().shape({
@@ -67,10 +57,7 @@ function Login(){
         {
             (async () => {
 
-                let name = await authenticate(data.email, data.password, isLogin);
-
-                myUser = name;
-                console.log(curUser);
+                await authenticate(data.email, data.password, isLogin);
             })()
 
         }
@@ -79,7 +66,6 @@ function Login(){
             forgotPassword(data.email)
         }
 
-        //TODO: Add redirect functionality, after authenticated login or registration.
 
         reset()
     };
