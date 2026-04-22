@@ -1048,6 +1048,41 @@ router.post('/getName', async (req, res)=> {
 
 });
 
+router.post('/updateUserRole', async (req, res) => {
+    //userToUpdate = userID, newRole = "ADMIN/CAREGIVER/PATIENT"
+    const { userIDToUpdate, newRole } = req.body;
+
+    //Verify user's cookie token before doing anything
+    const cookieToken = req.cookies.authcookie;
+    if(!cookieToken) console.log("invalid cookie");
+
+    let userID;
+    jwt.verify(cookieToken, process.env.JWT_SECRET, (err, user) => {
+        if(err) return console.log("Error or invalid cookie");
+        // req.user = user;
+        console.log("Authenticated with cookie as user: ", user);
+        userID = user.id;
+    });
+    //Check the role of the user associated with the cookie token
+    const user = await prisma.user.findUnique({
+        where: {
+            id: userID
+        },
+    });
+    if(user.role === "ADMIN")
+    {
+        const user = await prisma.user.update({
+            where: {
+                id: userIDToUpdate
+            },
+            data: { role: newRole}
+        });
+
+    }
+    res.sendStatus(201);
+
+});
+
 
 
 export default router;
