@@ -5,6 +5,14 @@ import { Navigate } from 'react-router-dom';
 import * as yup from 'yup'
 import { useState } from "react"
 
+const MAX_PASS_LEN = 20
+const MIN_PASS_LEN = 6
+const PASS_REQUIREMENTS = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).+$/
+
+//TODO: Clean up and reformat Forgot Password and user registration email HTML formatting
+//      Fix the button on the emails
+
+//TODO: Create 2FA email and logic
 
 // ===== GLOBAL STATE =====
 let isAuthenticating = false
@@ -28,13 +36,14 @@ function Login(){
 
     const loginSchema = yup.object().shape({
         email: yup.string().email("Invalid format").required("Email is required"),
-        password: yup.string().min(4, "Incorrect password").max(20).required()
+        password: yup.string().min(MIN_PASS_LEN, "Incorrect password").max(MAX_PASS_LEN).required("Password is required")
     });
 
     const registerSchema = yup.object().shape({
         email: yup.string().email("Invalid format").required("Email required"),
-        password: yup.string().min(4, "Must be at least 4 characters").max(20,"Must be less than 20 characters")
-            .required("Password Required"),
+        password: yup.string().min(MIN_PASS_LEN, "Must be at least 6 characters").max(MAX_PASS_LEN,"Must be 20 characters or less")
+            .required("Password Required").matches(PASS_REQUIREMENTS, "Password must include uppercase, lowercase, a number, and a special character"),
+        
         confirmPassword: yup.string().oneOf([yup.ref("password"),null], "Passwords Don't Match").required("Re-enter Password")
         });
 
@@ -95,7 +104,7 @@ function Login(){
                             <div className="password-field">
                             <label htmlFor="password" className="form-label">Password</label>
                             <input type="password"
-                                placeholder="******" {...register("password")}
+                                placeholder="******" {...register("password")} maxLength={MAX_PASS_LEN}
                                 className="form-input"/>
                             </div>
 
@@ -111,6 +120,7 @@ function Login(){
                             <input type="password" 
                                 placeholder="******"
                                 {...register("confirmPassword")}
+                                maxLength={MAX_PASS_LEN}
                                 className="form-input"/>
                             <p className="error">{errors.confirmPassword?.message}</p>
                         </div>
@@ -201,7 +211,8 @@ async function authenticate(emailVal, passVal, isLogin) {
         isAuthenticating ||
         !emailVal ||
         !passVal ||
-        passVal.length < 6
+        passVal.length < MIN_PASS_LEN ||
+        passVal.length > MAX_PASS_LEN
     )
 
     isAuthenticating = true
