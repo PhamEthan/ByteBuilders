@@ -28,13 +28,12 @@ function Employee( {userRole} ) {
 
       <div className="tile-container">
         
-        {/*}
+
         <Link to ="/checkin" className="tile-link">
           <button className="tile">
             Checkin
           </button>
         </Link>
-        */}
 
         <Link to ="/schedule" className="tile-link">
           <button className="tile">
