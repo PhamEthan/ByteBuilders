@@ -47,6 +47,7 @@ function NavBarLoggedIn({handleChange, isChecked, curUser}) {
                     <Link to ="/about" className="nav-link">About Us</Link>
                     <Link to ="/calendar" className="nav-link">Calendar</Link>
                     <Link to ="/fileviewer" className="nav-link">Files</Link>
+                    <Link to="/employee" className="nav-link">Employee Portal</Link>
                     <div className="logoutBox">
                     <p className="text-formatted" value={curUser}> {curUser} </p>
                     <Link to ="/logout" className="nav-link">

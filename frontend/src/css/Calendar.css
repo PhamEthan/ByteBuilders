@@ -251,7 +251,7 @@
 
 .display-box {
   width: 100%;
-  padding: 0.9rem 1rem;
+  padding: 5px 5px 5px 10px;
   margin-bottom: 10px;
   border: 1px solid #8b8c8d;
   border-radius: 10px;

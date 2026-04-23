@@ -124,7 +124,6 @@ function Login(){
                     <p className="switch-txt">
                         {"Forgot your password?"}
                         <button onClick={()=> {
-                            //TODO: Make this prettier, and fit into the UI better :)
                             setIsLogin(true);
                             setResetPassword(true);
                         }}
@@ -255,7 +254,7 @@ async function getUserName()
         header: { 'Content-Type' : 'application/json'},
     });
     const data = await res.json();
-    return data.name;
+    return [data.name, data.role ];
 
 }
 

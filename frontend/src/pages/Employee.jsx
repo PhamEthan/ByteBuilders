@@ -4,7 +4,7 @@ import { useContext } from "react";
 import { UserContext } from "../contexts/UserContext";
 import {Link} from "react-router-dom";
 
-function Employee() {
+function Employee( {userRole} ) {
   const { users, userStates } = useContext(UserContext);
 
   return (
@@ -28,11 +28,13 @@ function Employee() {
 
       <div className="tile-container">
         
+        {/*}
         <Link to ="/checkin" className="tile-link">
           <button className="tile">
             Checkin
           </button>
         </Link>
+        */}
 
         <Link to ="/schedule" className="tile-link">
           <button className="tile">
@@ -43,6 +45,12 @@ function Employee() {
        <Link to ="/notes" className="tile-link">
           <button className="tile">
             Notes
+          </button>
+        </Link>
+
+        <Link to ="/userManagement" className="tile-link">
+          <button className="tile">
+            User Management
           </button>
         </Link>
       </div>

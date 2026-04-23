@@ -13,6 +13,8 @@ import Checkin from "./pages/Checkin";
 import Schedule from "./pages/Schedule";
 import Notes from "./pages/Notes";
 import Verify from "./pages/Verify";
+import UserManagement from "./pages/UserManagement";
+
 import becausewecareLogo from "./assets/becausewecare_logo.jpg";
 import { UserProvider } from "./contexts/UserContext";
 
@@ -24,9 +26,13 @@ import React, { useState, useEffect } from "react";
 function App() {
   const [isDark, setDark] = useState(false);
   const [userName, setUserName] = useState("");
+  const [userRole, setUserRole] = useState("");
   (async() => {
-    let name = await getUserName();
+    let data = await getUserName();
+    let name = data[0];
+    let role = data[1];
     setUserName(name);
+    setUserRole(role);
   })()
 
   useEffect(() => {
@@ -47,16 +53,20 @@ function App() {
         <Route element={<Main isDark={isDark} setDark={setDark} />}>
         <Route path="/" element={<Home />} />
         <Route path="/about" element={<About />} />
-        <Route path="/calendar" element={<Calendar />} />
+        <Route path="/calendar" element={<Navigate to="/" />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/fileviewer" element={<FileViewer />} />
+        <Route path="/fileviewer" element={<Navigate to="/" />} />
         <Route path="/resetPassword" element={<ResetPassword />}/>
         <Route path="/verify" element={<Verify />}/>
+        <Route path="/employee" element={<Navigate to="/" />} />
+        <Route path="/checkin" element={<Navigate to="/" />} />
+        <Route path="/schedule" element={<Navigate to="/" />} />
+        <Route path="/notes" element={<Navigate to="/" />} />
         </Route>
       }
 
-      {/* Logged In Routes WITH Navbar + Footer */}
-      {userName !== "" &&
+      {/* EMPLOYEE - Logged In Routes WITH Navbar + Footer */}
+      { (userName !== "" && (userRole === "ADMIN" || userRole === "CAREGIVER"))&&
         <Route element={<MainVerified isDark={isDark} setDark={setDark} />}>
         <Route path="/" element={<Home />} />
         <Route path="/about" element={<About />} />
@@ -66,15 +76,35 @@ function App() {
         <Route path="/fileviewer" element={<FileViewer />} />
         <Route path="/resetPassword" element={<ResetPassword />}/>
         <Route path="/verify" element={<Verify />}/>
+        <Route path="/employee" element={<Employee userRole={userRole}/>} />
+        <Route path="/checkin" element={<Checkin />} />
+        <Route path="/schedule" element={<Schedule />} />
+        <Route path="/notes" element={<Notes />} />
+        <Route path="/userManagement" element={<UserManagement />} />
+        </Route>
+      }
+
+      {/* PATIENT - Logged In Routes WITH Navbar + Footer */}
+      { (userName !== "" && (userRole === "PATIENT" ))&&
+        <Route element={<MainVerified isDark={isDark} setDark={setDark} />}>
+        <Route path="/" element={<Home />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/calendar" element={<Calendar />} />
+        <Route path="/login" element={<Navigate to="/" />} />
+        <Route path="/logout" element={<Logout />} />
+        <Route path="/fileviewer" element={<Navigate to="/" />} />
+        <Route path="/resetPassword" element={<ResetPassword />}/>
+        <Route path="/verify" element={<Verify />}/>
+        <Route path="/employee" element={<Navigate to="/" />} />
+        <Route path="/checkin" element={<Navigate to="/" />} />
+        <Route path="/schedule" element={<Navigate to="/" />} />
+        <Route path="/notes" element={<Navigate to="/" />} />
         </Route>
       }
 
 
         {/* Employee Route WITHOUT Navbar + Footer */}
-        <Route path="/employee" element={<Employee />} />
-        <Route path="/checkin" element={<Checkin />} />
-        <Route path="/schedule" element={<Schedule />} />
-        <Route path="/notes" element={<Notes />} />
+
 
       </Routes>
     </UserProvider>

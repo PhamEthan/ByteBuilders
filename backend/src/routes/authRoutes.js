@@ -1042,15 +1042,49 @@ router.post('/getName', async (req, res)=> {
         });
 
         var name = user.fullName;
-        res.json({name: name}).send();
+        var role = user.role;
+        res.json({name: name, role: role}).send();
     }
 
 
 });
 
-router.post('/updateUserRole', async (req, res) => {
-    //userToUpdate = userID, newRole = "ADMIN/CAREGIVER/PATIENT"
-    const { userIDToUpdate, newRole } = req.body;
+router.post('/updateUserRole', async(req, res) => {
+
+
+    const {userID, newRole} = req.body
+
+
+    const user = await prisma.user.update({
+        where: {
+            id: userID
+        },
+        data: { role: newRole}
+    });
+
+    res.sendStatus(201);
+
+});
+
+router.post('/deleteUser', async (req, res) => {
+
+    const { userID } = req.body;
+
+
+    const user = await prisma.user.delete({
+        where: {
+            id: userID
+        }
+    });
+
+    res.sendStatus(201);
+
+});
+
+
+
+
+router.post('/getUsersList', async (req, res) => {
 
     //Verify user's cookie token before doing anything
     const cookieToken = req.cookies.authcookie;
@@ -1071,17 +1105,28 @@ router.post('/updateUserRole', async (req, res) => {
     });
     if(user.role === "ADMIN")
     {
-        const user = await prisma.user.update({
-            where: {
-                id: userIDToUpdate
-            },
-            data: { role: newRole}
-        });
+        var fullUserList = [];
 
+        const users = await prisma.user.findMany();
+
+        for(var i = 0; i < users.length; i++)
+        {
+            var name = users[i].fullName;
+            var role = users[i].role;
+            var id = users[i].id;
+            if(name !== null)
+            {
+                var curUser = [name, role, id];
+                fullUserList.push(curUser);
+            }
+        }
+        console.log(fullUserList);
+
+        res.json({userList: fullUserList}).send();
     }
-    res.sendStatus(201);
 
 });
+
 
 
 

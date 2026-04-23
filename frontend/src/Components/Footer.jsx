@@ -12,7 +12,7 @@ function Footer() {
                 <div className="footer-links">
                     <Link to="/features" className="footer-link">Features</Link>
                     <Link to="/learn" className="footer-link">Learn more</Link>
-                    <Link to="/employee" className="footer-link">Employee Login</Link>
+
                 </div>
                 <div className="footer-socials">
                     <a 
