@@ -89,7 +89,7 @@ async function verifyAccout(data, id, token)
         res = await fetch(apiBase + 'auth/verifyAcc', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ password: data.password, id: id, fullName: data.fullName, token: token })
+            body: JSON.stringify({ id: id, fullName: data.fullName, token: token })
         })
         if (!res.ok) {
             throw new Error(data.message || 'Failed to authenticate.')

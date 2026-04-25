@@ -784,7 +784,7 @@ router.post("/resetPassword", async(req, res) => {
 
 router.post("/verifyAcc", async(req, res) => {
     //Validate that the user ID exists
-    const {password, id, token, fullName} = req.body
+    const {id, token, fullName} = req.body
 
     try {
         const user = await prisma.user.findUnique({
@@ -800,7 +800,7 @@ router.post("/verifyAcc", async(req, res) => {
             const hashedPassword = bcrypt.hashSync(password, 8);
             const updatePass = await prisma.user.update({
                 where: {username : user.username},
-                data:  {password: hashedPassword, verified: true, registerToken: "", fullName: fullName},
+                data:  {verified: true, registerToken: "", fullName: fullName},
 
             });
             res.sendStatus(201);
