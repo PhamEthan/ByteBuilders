@@ -1,7 +1,7 @@
 import "./css/App.css"
 import Calendar from "./pages/Calendar";
 import Home from "./pages/Home";
-import { Login, getUserName} from "./pages/Login";
+import Login from "./pages/Login";
 import Logout from "./pages/Logout";
 import About from "./pages/About";
 import ResetPassword from "./pages/Reset"
@@ -23,17 +23,25 @@ import { Navigate } from 'react-router-dom';
 import { Routes, Route } from "react-router-dom";
 import React, { useState, useEffect } from "react";
 
+
+const apiBase = 'http://localhost:5003/'
+
 function App() {
   const [isDark, setDark] = useState(false);
   const [userName, setUserName] = useState("");
   const [userRole, setUserRole] = useState("");
-  (async() => {
+
+
+  (async () => {
     let data = await getUserName();
     let name = data[0];
     let role = data[1];
     setUserName(name);
     setUserRole(role);
   })()
+
+
+
 
   useEffect(() => {
     const existingIcon = document.querySelector("link[rel~='icon']");
@@ -67,7 +75,7 @@ function App() {
 
       {/* EMPLOYEE - Logged In Routes WITH Navbar + Footer */}
       { (userName !== "" && (userRole === "ADMIN" || userRole === "CAREGIVER"))&&
-        <Route element={<MainVerified isDark={isDark} setDark={setDark} />}>
+        <Route element={<MainVerified isDark={isDark} setDark={setDark} curUser={userName}/>}>
         <Route path="/" element={<Home />} />
         <Route path="/about" element={<About />} />
         <Route path="/calendar" element={<Calendar />} />
@@ -86,7 +94,7 @@ function App() {
 
       {/* PATIENT - Logged In Routes WITH Navbar + Footer */}
       { (userName !== "" && (userRole === "PATIENT" ))&&
-        <Route element={<MainVerified isDark={isDark} setDark={setDark} />}>
+        <Route element={<MainVerified isDark={isDark} setDark={setDark} curUser={userName}/>}>
         <Route path="/" element={<Home />} />
         <Route path="/about" element={<About />} />
         <Route path="/calendar" element={<Calendar />} />
@@ -110,5 +118,21 @@ function App() {
     </UserProvider>
   );
 }
+
+
+async function getUserName()
+{
+
+  let res = await fetch(apiBase + 'auth/getName', {
+    credentials: 'include',
+    method: 'POST',
+    header: { 'Content-Type' : 'application/json'},
+  });
+  const data = await res.json();
+  console.log(data);
+  return [data.name, data.role ];
+
+}
+
 
 export default App;

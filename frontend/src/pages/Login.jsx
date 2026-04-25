@@ -225,10 +225,11 @@ async function authenticate(emailVal, passVal, isLogin) {
                 body: JSON.stringify({ username: emailVal, password: passVal })
             })
             const data = await res.json();
-            if(data.name !== "")
+            if(res.status === 201)
             {
                 window.location.replace("/");
             }
+
         }
 /*
         if (!res.ok || !data.token) {
@@ -245,19 +246,7 @@ async function authenticate(emailVal, passVal, isLogin) {
 }
 
 
-async function getUserName()
-{
-
-    let res = await fetch(apiBase + 'auth/getName', {
-        credentials: 'include',
-        method: 'POST',
-        header: { 'Content-Type' : 'application/json'},
-    });
-    const data = await res.json();
-    return [data.name, data.role ];
-
-}
 
 
 
-export {Login, getUserName};
+export default Login;

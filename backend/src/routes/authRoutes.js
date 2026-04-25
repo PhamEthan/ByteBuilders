@@ -192,6 +192,9 @@ router.post('/login', async(req, res) => {
                 username: username
             }
         })
+
+        console.log(user);
+
         //User not in Database => Exit
         if (!user) { return res.sendStatus(404).send({ message: "User not Found"})}
         // Compare Hashed Passwords
@@ -206,7 +209,7 @@ router.post('/login', async(req, res) => {
             secure: true,
             SameSite: "None",
         });
-        res.json({token: token, name: user.fullName})
+        res.status(201).json({token: token, name: user.fullName});
     } catch (err) {
         console.log(err.message)
         res.sendStatus(503)
@@ -800,6 +803,7 @@ router.post("/verifyAcc", async(req, res) => {
                 data:  {password: hashedPassword, verified: true, registerToken: "", fullName: fullName},
 
             });
+            res.sendStatus(201);
         }
 
     } catch (err) {
@@ -1127,6 +1131,24 @@ router.post('/getUsersList', async (req, res) => {
 
 });
 
+
+router.post('/getLocationData', async (req, res) => {
+
+    const { address } = req.body;
+
+    let response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${address}` ,
+        {
+            headers: { 'User-Agent': 'Because We Care Caregiving' },
+        }
+        );
+    const data = await response.json();
+    console.log(data);
+    res.json({pos: data}).send();
+
+
+
+});
 
 
 

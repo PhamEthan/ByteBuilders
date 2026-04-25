@@ -91,6 +91,46 @@ router.post('/updateEvent', async(req, res)=> {
 });
 
 
+router.post('/eventCheckIn', async(req, res)=> {
+  const calendar = google.calendar({version:'v3', auth:oauth2Client});
+
+  const { title, location, info, eventID, startTime, endTime } = req.body;
+
+  var timeZone = 'America/Chicago';
+
+  //Input data seems to be pretty flexible. Format it like this:
+  var eventData = {
+    'summary': title,
+    'description' : info,
+    'location': location,
+    'start' :{
+      'dateTime' : startTime,
+      'timeZone' : timeZone
+
+    },
+    'end' : {
+      'dateTime' : endTime,
+      'timeZone' : timeZone
+    }
+  };
+
+  //this is done using "<calendarName>.events.update(calendarId:<CalID>, eventId:<EventID>, resource:<resource>)"
+  calendar.events.update({
+    calendarId : calendarID,
+    eventId : eventID,
+    resource: eventData
+  }, function (err, event) {
+    if(err) {
+      console.log('There was an error updating the event: ' + err);
+      return;
+    }
+    //Logging and debug, and redirect back to /landing.
+    console.log('event updated: %s', event.data);
+  });
+
+});
+
+
 //Handles creating a new event.
 router.post('/newEvent', async(req,res) => {
   console.log("Trying to create new Event...");

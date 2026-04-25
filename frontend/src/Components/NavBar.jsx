@@ -36,7 +36,7 @@ function NavBar({handleChange, isChecked}) {
 }
 
 function NavBarLoggedIn({handleChange, isChecked, curUser}) {
-    curUser = "Jarod Moore";
+    console.log(isChecked);
     return (
         <nav classname="navbar">
             <div className="navbar-container">

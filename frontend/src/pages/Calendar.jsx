@@ -22,7 +22,7 @@ function Calendar(){
     const [location, setLocation] = useState("");
     const [selectedEvent, setSelectedEvent] = useState(null);
     const [isEditing, setIsEditing] = useState(false);
-    //const [eventID, setEventID] = useState("");
+    const [eventID, setEventID] = useState("");
     const [eventEmployee, setEventEmployee] = useState("");
     const [eventUser, setEventUser] = useState("");
 
@@ -33,6 +33,7 @@ function Calendar(){
     const [eventEndHour, setEventEndHour] = useState("");
     const [eventEndMinute, setEventEndMinute] = useState("");
     const [eventEndAMPM, setEventEndAMPM] = useState("");
+    const [checkInStatus, setCheckInStatus] = useState("No Check In yet.");
 
 
     const [startTime, setStartTime] = useState("");
@@ -46,8 +47,17 @@ function Calendar(){
     const [users, setUsers] = useState([]);
     const [role, setRole] = useState(null);
     const [curUserID, setCurUserID] = useState("");
+    const [curUserName, setCurUserName] = useState("");
     const [isAuth, setIsAuth] = useState(false);
     const [eventsFulfilled, setEventsFulfilled] = useState(false);
+
+    //const { users, userStates, updateUserState } = useContext(UserContext);
+    const [address, setAddress] = useState("");
+    const [message, setMessage] = useState("");
+    const [checkInUser, setCheckInUser] = useState("");
+    const [checkInTime, setCheckInTime] = useState("");
+
+
 
     const [error, setError] = useState("");
 
@@ -59,6 +69,12 @@ function Calendar(){
         setIsPopupOpen(true);
     };
     */
+
+
+
+
+
+
 
     const handleSelect = (info) => {
         console.log("Selected: ", info.startStr, info.endStr);
@@ -419,9 +435,10 @@ function Calendar(){
 
         setSelectedEvent(event);
         setTitle(event.title);
-        //setEventID(event.id);
+        setEventID(event.id);
         console.log(event.id);
         setLocation(event.extendedProps.location);
+        setAddress(event.extendedProps.location);
         setDescription(event.extendedProps.description || "");
         calculateTime(event.start, event.end);
         setStartTime(event.start);
@@ -430,6 +447,8 @@ function Calendar(){
         setCaregiverName(event.extendedProps.caregiver);
         setEventUser(event.extendedProps.patient);
         setEventEmployee(event.extendedProps.caregiver);
+        setCheckInStatus(event.extendedProps.checkInStatus);
+
         setIsEditing(false);
         setIsPopupOpen(true);
     };
@@ -520,11 +539,12 @@ function Calendar(){
             var inputDescription = eventsResponse[index].description;
             var employee = inputDescription.split("-");
             var patient = employee[1].split("=");
+            var description = patient[1].split("+");
 
             var employeeName = employee[0];
             var patientName = patient[0];
-            var newDescription = patient[1];
-
+            var newDescription = description[0];
+            var checkInStatus = description[1];
 
             //var newDescription = eventsResponse[index].description;
             var newEventID = eventsResponse[index].id;
@@ -544,6 +564,7 @@ function Calendar(){
                     description: newDescription,
                     caregiver: employeeName,
                     patient: patientName,
+                    checkInStatus: checkInStatus
                 }
 
             });
@@ -551,6 +572,144 @@ function Calendar(){
 
         }
     }
+
+
+
+
+
+    // Function to calculate distance between two coordinates (Haversine formula)
+    const getDistance = (lat1, lon1, lat2, lon2) => {
+        const R = 6371e3; // meters
+        const toRad = (value) => (value * Math.PI) / 180;
+
+        const φ1 = toRad(lat1);
+        const φ2 = toRad(lat2);
+        const Δφ = toRad(lat2 - lat1);
+        const Δλ = toRad(lon2 - lon1);
+
+        const a =
+        Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+        Math.cos(φ1) *
+        Math.cos(φ2) *
+        Math.sin(Δλ / 2) *
+        Math.sin(Δλ / 2);
+
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+        return R * c; // distance in meters
+    };
+
+    const handleCheckin = async (addressToCheck, userId) => {
+        if (!navigator.geolocation) {
+            console.log("Geolocation not supported.")
+            setMessage("Geolocation not supported.");
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(async (position) => {
+
+            const userLat = position.coords.latitude;
+            const userLon = position.coords.longitude;
+            try {
+                // Convert address to coordinates using OpenStreetMap
+
+                const response = await fetch(apiBase + 'auth/getLocationData', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ address: address })
+                });
+
+                const position = await response.json();
+                let data = position.pos;
+
+                if (data.length === 0) {
+                    setMessage("Address not found.");
+                    //updateUserState(userId, { isVerified: false, isError: false });
+                    //triggerErrorFlash(userId);
+                    return;
+                }
+
+                const targetLat = parseFloat(data[0].lat);
+                const targetLon = parseFloat(data[0].lon);
+
+                const distance = getDistance(userLat, userLon, targetLat, targetLon);
+
+                if (distance <= 500) {
+                    setMessage("✅ Check-in successful! You are at the location.");
+
+                    let currentTime = new Date();
+                    console.log("Check in time: ", currentTime);
+                    setCheckInTime(currentTime);
+                    console.log(curUserName);
+                    setCheckInUser(curUserName);
+
+                    var checkInTimeString = caregiverName + "-" + patientName + "=" + description + "+" + curUserID + " checked in at: " + currentTime;
+
+
+
+                    var formattedStart = new Date(selectedEvent.end);
+                    var modifiedStart = parseInt(eventStartHour);
+                    if(eventStartAMPM === "PM")
+                    {
+                        //Adjust by 12 hours if in the evening, to account for AM/PM for ISO time conversion
+                        modifiedStart += 12;
+                    }
+                    formattedStart.setHours(modifiedStart);
+                    formattedStart.setMinutes(eventStartMinute);
+
+                    var startISO = formattedStart.toISOString();
+
+
+                    //Time and date Formatting.
+                    var formattedEnd = new Date(selectedEvent.end);
+                    var modifiedEnd = parseInt(eventEndHour);
+                    if(eventEndAMPM === "PM")
+                    {
+                        //Adjust by 12 hours if in the evening, to account for AM/PM for ISO time conversion
+                        modifiedEnd += 12;
+                    }
+
+                    //If the event starts on one day, and ends the next day, the date rolls over to the next day.
+                    if(eventStartAMPM === "PM" && eventEndAMPM === "AM")
+                    {
+                        formattedEnd.setDate(formattedEnd.getDate() + 1);
+                    }
+
+                    formattedEnd.setHours(modifiedEnd);
+                    formattedEnd.setMinutes(eventEndMinute);
+
+                    var endISO = formattedEnd.toISOString();
+
+                    console.log("Selected Start Time: ", formattedStart);
+                    console.log("Selected End Time: ", formattedEnd);
+
+                    setStartTime(startISO);
+                    setEndTime(endISO);
+
+
+
+                    updateEventDetails(title, location, checkInTimeString, eventID, startISO, endISO);
+                    //updateUserState(userId, { isVerified: true, isError: false });
+                } else {
+                    setMessage(
+                        `❌ You are not at the location. You are ${Math.round(
+                            distance
+                        )} meters away.`
+                    );
+                    //updateUserState(userId, { isVerified: false, isError: false });
+                    //triggerErrorFlash(userId);
+                }
+            } catch (error) {
+                setMessage("Error verifying location.");
+                //updateUserState(userId, { isVerified: false, isError: false });
+                //triggerErrorFlash(userId);
+            }
+        },function error(msg) {alert('Please enable your GPS position feature.');},
+                                            {maximumAge:10000, timeout:5000, enableHighAccuracy: true});
+    };
+
+
+
 
 
 
@@ -562,7 +721,7 @@ function Calendar(){
         (async () => {
             var dataPacket = await authenticate();
             setRole(dataPacket[0]);
-
+            setCurUserName(dataPacket[2]);
 
 
             if(dataPacket[0] === "ADMIN")
@@ -663,6 +822,24 @@ function Calendar(){
                     saveEvent();
                 }}
                 >
+
+                {/*    Check In button     */}
+                {((role === "CAREGIVER")) && !isEditing &&
+                    <div>
+                    <button
+                    type="button"
+                    className="submit-btn"
+                    onClick={handleCheckin}
+                    >Check-in
+                    </button>
+
+
+                    <p>{message}</p>
+                    </div>
+
+                }
+
+
 
 
 
@@ -907,9 +1084,16 @@ function Calendar(){
                     </div>
 
                     <div className = "form-dropdown" >
-                    <label htmlFor="event-descriptio">Description</label>
+                    <label htmlFor="event-description">Description</label>
                     <div className = "display-box" value ={description} disabled={true}>
                     {description}
+                    </div>
+                    </div>
+
+                    <div className = "form-dropdown" >
+                    <label htmlFor="event-description">Check In Status</label>
+                    <div className = "display-box" value ={checkInStatus} disabled={true}>
+                    {checkInStatus}
                     </div>
                     </div>
 
@@ -972,7 +1156,19 @@ function Calendar(){
 
 
 
+async function updateEventDetails(title, location, info, eventID, startTime, endTime)
+{
+    try {
+        let res = await fetch(apiBase + 'appointments/eventCheckIn', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title: title, location: location, info: info, eventID: eventID, startTime: startTime, endTime: endTime }),
+        });
 
+    } catch (err) {
+        console.log(err);
+    }
+}
 
 
 
@@ -1003,7 +1199,7 @@ async function authenticate() {
         }
         else
         {
-            return [role, events, name]
+            return [role, events, name];
         }
 
 
@@ -1062,7 +1258,6 @@ async function requestUpdateEvent(caregiver, patient, newCaregiver, newPatient, 
 {
 
     try {
-
         let res = await fetch(apiBase + 'appointments/updateEvent', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },

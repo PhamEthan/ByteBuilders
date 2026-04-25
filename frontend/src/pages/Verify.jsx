@@ -22,8 +22,6 @@ function Verify(){
 
     const verifySchema = yup.object().shape({
         fullName: yup.string().required("Full Name Required"),
-        password: yup.string().min(4, "New password must be at least 4 characters").max(20,"New Password must be less than 20 characters").required("Password Required"),
-        confirmPassword: yup.string().oneOf([yup.ref("password"),null], "Passwords Don't Match").required("Re-enter Password")
     });
 
 
@@ -61,33 +59,10 @@ function Verify(){
         )}
 
 
-        {!verifyAcc && (
-            <div className="form-group">
-            <div className="password-field">
-            <label htmlFor="password" className="form-label">Password</label>
-            <input type="password"
-            placeholder="******" {...register("password")}
-            className="form-input"/>
-            </div>
 
-            <p className="error">{errors.password?.message}</p>
-            </div>
-        )}
-
-
-        {!verifyAcc && (
-            <div className="form-group">
-            <label htmlFor="confirmPassword" className="form-label">Confirm password</label>
-            <input type="password"
-            placeholder="******"
-            {...register("confirmPassword")}
-            className="form-input"/>
-            <p className="error">{errors.confirmPassword?.message}</p>
-            </div>
-        )}
 
         {verifyAcc && (
-            <p className="error">{"Password has been reset."}</p>
+            <p className="error">{"Account registration completed."}</p>
         )}
 
 
@@ -118,6 +93,10 @@ async function verifyAccout(data, id, token)
         })
         if (!res.ok) {
             throw new Error(data.message || 'Failed to authenticate.')
+        }
+        if(res.status === 201)
+        {
+            window.location.replace("/");
         }
 
 
