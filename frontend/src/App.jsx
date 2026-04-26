@@ -31,14 +31,26 @@ function App() {
   const [userName, setUserName] = useState("");
   const [userRole, setUserRole] = useState("");
 
+  useEffect(() => {
+    let isActive = true;
 
-  (async () => {
-    let data = await getUserName();
-    let name = data[0];
-    let role = data[1];
-    setUserName(name);
-    setUserRole(role);
-  })()
+    async function loadUser() {
+      const data = await getUserName();
+
+      if (!isActive) {
+        return;
+      }
+
+      setUserName(data.name || "");
+      setUserRole(data.role || "");
+    }
+
+    loadUser();
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
 
 
 
@@ -63,7 +75,7 @@ function App() {
         <Route path="/about" element={<About />} />
         <Route path="/calendar" element={<Navigate to="/" />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/fileviewer" element={<Navigate to="/" />} />
+        <Route path="/fileviewer" element={<FileViewer />} />
         <Route path="/resetPassword" element={<ResetPassword />}/>
         <Route path="/verify" element={<Verify />}/>
         <Route path="/employee" element={<Navigate to="/" />} />
@@ -100,7 +112,7 @@ function App() {
         <Route path="/calendar" element={<Calendar />} />
         <Route path="/login" element={<Navigate to="/" />} />
         <Route path="/logout" element={<Logout />} />
-        <Route path="/fileviewer" element={<Navigate to="/" />} />
+        <Route path="/fileviewer" element={<FileViewer />} />
         <Route path="/resetPassword" element={<ResetPassword />}/>
         <Route path="/verify" element={<Verify />}/>
         <Route path="/employee" element={<Navigate to="/" />} />
@@ -122,15 +134,22 @@ function App() {
 
 async function getUserName()
 {
+  try {
+    const res = await fetch(apiBase + 'auth/getName', {
+      credentials: 'include',
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    });
 
-  let res = await fetch(apiBase + 'auth/getName', {
-    credentials: 'include',
-    method: 'POST',
-    header: { 'Content-Type' : 'application/json'},
-  });
-  const data = await res.json();
-  console.log(data);
-  return [data.name, data.role ];
+    if (!res.ok) {
+      return { name: '', role: '' };
+    }
+
+    const data = await res.json();
+    return { name: data.name || '', role: data.role || '' };
+  } catch (error) {
+    return { name: '', role: '' };
+  }
 
 }
 
