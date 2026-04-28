@@ -55,107 +55,61 @@ function FileViewer() {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedFileCategory, setSelectedFileCategory] = useState('Medical Records');
   const [fileNote, setFileNote] = useState('');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [pageError, setPageError] = useState('');
+  const [isDragging, setIsDragging] = useState(false);
   const [previewFile, setPreviewFile] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
-  const [isDragging, setIsDragging] = useState(false);
-  const [uploadErrors, setUploadErrors] = useState([]);
-  const [pageError, setPageError] = useState('');
-
+  const fileInputRef = useRef();
   const dragCounter = useRef(0);
-  const fileInputRef = useRef(null);
 
-  useEffect(() => {
-    let isActive = true;
-
-    async function loadFiles() {
-      try {
-        const storedFiles = await fetchFiles();
-        if (isActive) {
-          setFiles(storedFiles);
-          setPageError('');
-        }
-      } catch (error) {
-        if (isActive) {
-          setPageError(error.message || 'Unable to load files. Make sure the file viewer server is running on port 5004.');
-        }
-      } finally {
-        if (isActive) {
-          setIsLoading(false);
-        }
-      }
-    }
-
-    loadFiles();
-
-    return () => {
-      isActive = false;
-    };
-  }, []);
+  // Search and filter state
+  const [searchQuery, setSearchQuery] = useState('');
 
   const filteredFiles = useMemo(() => {
-    let nextFiles = files;
-
+    let filtered = files;
     if (selectedCategory !== 'All') {
-      nextFiles = nextFiles.filter((file) => file.category === selectedCategory);
+      filtered = filtered.filter(file => file.category === selectedCategory);
     }
-
     if (searchQuery.trim()) {
-      const query = searchQuery.trim().toLowerCase();
-      nextFiles = nextFiles.filter((file) => file.name.toLowerCase().includes(query) || (file.note || '').toLowerCase().includes(query));
+      const q = searchQuery.trim().toLowerCase();
+      filtered = filtered.filter(file =>
+        file.name.toLowerCase().includes(q) ||
+        (file.note && file.note.toLowerCase().includes(q))
+      );
     }
+    return filtered;
+  }, [files, selectedCategory, searchQuery]);
 
-    return nextFiles;
-  }, [files, searchQuery, selectedCategory]);
-
-  function downloadCurrentFile(file) {
-    const anchor = document.createElement('a');
-    anchor.href = file.downloadUrl;
-    anchor.download = file.name;
-    anchor.click();
-  }
-
-  async function processFiles(rawFiles) {
-    const errors = [];
-    const validFiles = [];
-
-    Array.from(rawFiles).forEach((file) => {
-      if (file.size > MAX_FILE_SIZE) {
-        errors.push(`"${file.name}" exceeds the 10 MB limit.`);
-        return;
+  useEffect(() => {
+    let ignore = false;
+    async function loadFiles() {
+      setIsLoading(true);
+      try {
+        const fetched = await fetchFiles();
+        if (!ignore) setFiles(fetched);
+      } catch (error) {
+        if (!ignore) setPageError(error.message || 'Unable to load files.');
+      } finally {
+        if (!ignore) setIsLoading(false);
       }
-
-      if (!ALLOWED_TYPES.includes(file.type)) {
-        errors.push(`"${file.name}" is not a supported file type.`);
-        return;
-      }
-
-      validFiles.push(file);
-    });
-
-    setUploadErrors(errors);
-
-    if (validFiles.length === 0) {
-      return;
     }
+    loadFiles();
+    return () => { ignore = true; };
+  }, []);
 
+  async function processFiles(fileList) {
     setIsUploading(true);
-
+    setPageError('');
     try {
-      const uploadedFiles = [];
-
-      for (const file of validFiles) {
-        const createdFile = await uploadFile({ file, category: selectedFileCategory, note: fileNote });
-        uploadedFiles.push(createdFile);
+      for (const file of fileList) {
+        if (file.size > MAX_FILE_SIZE) throw new Error('File too large.');
+        if (!ALLOWED_TYPES.includes(file.type)) throw new Error('File type not allowed.');
+        await uploadFile({ file, category: selectedFileCategory, note: fileNote });
       }
-
-      setFiles((previous) => [...uploadedFiles, ...previous]);
+      const fetched = await fetchFiles();
+      setFiles(fetched);
       setFileNote('');
-      setPageError('');
-
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
+      if (fileInputRef.current) fileInputRef.current.value = '';
     } catch (error) {
       setPageError(error.message || 'Unable to upload files.');
     } finally {
@@ -171,18 +125,14 @@ function FileViewer() {
     event.preventDefault();
     event.stopPropagation();
     dragCounter.current += 1;
-    if (dragCounter.current === 1) {
-      setIsDragging(true);
-    }
+    if (dragCounter.current === 1) setIsDragging(true);
   }
 
   function handleDragLeave(event) {
     event.preventDefault();
     event.stopPropagation();
     dragCounter.current -= 1;
-    if (dragCounter.current === 0) {
-      setIsDragging(false);
-    }
+    if (dragCounter.current === 0) setIsDragging(false);
   }
 
   function handleDragOver(event) {
@@ -195,7 +145,6 @@ function FileViewer() {
     event.stopPropagation();
     setIsDragging(false);
     dragCounter.current = 0;
-
     if (event.dataTransfer.files && event.dataTransfer.files.length > 0) {
       void processFiles(event.dataTransfer.files);
       event.dataTransfer.clearData();
@@ -203,20 +152,34 @@ function FileViewer() {
   }
 
   async function handleDelete() {
-    if (!deleteTarget) {
-      return;
-    }
-
+    if (!deleteTarget) return;
     try {
       await deleteFile(deleteTarget.id);
       setFiles((previous) => previous.filter((file) => file.id !== deleteTarget.id));
-      if (previewFile?.id === deleteTarget.id) {
-        setPreviewFile(null);
-      }
+      if (previewFile?.id === deleteTarget.id) setPreviewFile(null);
       setDeleteTarget(null);
       setPageError('');
     } catch (error) {
       setPageError(error.message || 'Unable to delete file.');
+    }
+  }
+
+  async function downloadCurrentFile(file) {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(file.contentUrl, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+      if (!res.ok) throw new Error('Failed to download file');
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = file.name;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      setPageError('Download failed.');
     }
   }
 
@@ -285,16 +248,6 @@ function FileViewer() {
               style={{ display: 'none' }}
             />
           </div>
-
-          <p className="upload-hint">Max 10 MB per file. This File Viewer uses its own server on port 5004.</p>
-
-          {uploadErrors.length > 0 && (
-            <div className="upload-errors">
-              {uploadErrors.map((error) => (
-                <p key={error} className="upload-error">{error}</p>
-              ))}
-            </div>
-          )}
         </div>
 
         <div className="filter-section">
@@ -337,7 +290,7 @@ function FileViewer() {
                 <div key={file.id} className="file-card">
                   <div className="file-icon">
                     {file.type.startsWith('image/') ? (
-                      <img src={file.contentUrl} alt={file.name} className="thumb" />
+                      <SecureImageThumb file={file} />
                     ) : (
                       <span className="icon-text">{getFileIcon(file.type, file.name)}</span>
                     )}
@@ -356,9 +309,7 @@ function FileViewer() {
                         Preview
                       </button>
                     )}
-                    <a href={file.contentUrl} target="_blank" rel="noopener noreferrer" className="view-button">
-                      Open
-                    </a>
+                    <SecureOpenButton file={file} />
                     <button onClick={() => downloadCurrentFile(file)} className="download-button">
                       Download
                     </button>
@@ -378,28 +329,30 @@ function FileViewer() {
               <button className="modal-close" onClick={() => setPreviewFile(null)}>x</button>
               <h3>{previewFile.name}</h3>
 
+
               {previewFile.type.startsWith('image/') && (
-                <img src={previewFile.contentUrl} alt={previewFile.name} className="preview-image" />
+                <SecureImagePreview file={previewFile} />
               )}
               {previewFile.type === 'application/pdf' && (
-                <iframe src={previewFile.contentUrl} title={previewFile.name} className="preview-pdf" />
+                <SecureIframePreview file={previewFile} />
               )}
               {previewFile.type.startsWith('video/') && (
-                <video src={previewFile.contentUrl} controls className="preview-video">
-                  Your browser does not support the video tag.
-                </video>
+                <SecureVideoPreview file={previewFile} />
               )}
               {(previewFile.type.includes('text') || previewFile.type.includes('csv')) && (
-                <iframe src={previewFile.contentUrl} title={previewFile.name} className="preview-pdf" />
+                <SecureIframePreview file={previewFile} />
               )}
 
               <div className="modal-actions">
                 <button onClick={() => downloadCurrentFile(previewFile)} className="download-button">Download</button>
-                <a href={previewFile.contentUrl} target="_blank" rel="noopener noreferrer" className="view-button">Open in New Tab</a>
+                <SecureOpenButton file={previewFile} />
+
+
               </div>
             </div>
           </div>
         )}
+
 
         {deleteTarget && (
           <div className="modal-overlay" onClick={() => setDeleteTarget(null)}>
@@ -416,6 +369,117 @@ function FileViewer() {
       </div>
     </div>
   );
+}
+
+// --- SECURE FILE ACCESS HELPERS ---
+function SecureImageThumb({ file }) {
+  const [src, setSrc] = React.useState(null);
+  React.useEffect(() => {
+    let url;
+    (async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch(file.contentUrl, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+        if (!res.ok) throw new Error();
+        const blob = await res.blob();
+        url = URL.createObjectURL(blob);
+        setSrc(url);
+      } catch {
+        setSrc(null);
+      }
+    })();
+    return () => { if (url) URL.revokeObjectURL(url); };
+  }, [file.contentUrl]);
+  if (!src) return <span className="icon-text">IMG</span>;
+  return <img src={src} alt={file.name} className="thumb" />;
+}
+
+function SecureImagePreview({ file }) {
+  const [src, setSrc] = React.useState(null);
+  React.useEffect(() => {
+    let url;
+    (async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch(file.contentUrl, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+        if (!res.ok) throw new Error();
+        const blob = await res.blob();
+        url = URL.createObjectURL(blob);
+        setSrc(url);
+      } catch {
+        setSrc(null);
+      }
+    })();
+    return () => { if (url) URL.revokeObjectURL(url); };
+  }, [file.contentUrl]);
+  if (!src) return <div>Unable to preview image.</div>;
+  return <img src={src} alt={file.name} className="preview-image" />;
+}
+
+function SecureIframePreview({ file }) {
+  const [src, setSrc] = React.useState(null);
+  React.useEffect(() => {
+    let url;
+    (async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch(file.contentUrl, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+        if (!res.ok) throw new Error();
+        const blob = await res.blob();
+        url = URL.createObjectURL(blob);
+        setSrc(url);
+      } catch {
+        setSrc(null);
+      }
+    })();
+    return () => { if (url) URL.revokeObjectURL(url); };
+  }, [file.contentUrl]);
+  if (!src) return <div>Unable to preview file.</div>;
+  return <iframe src={src} title={file.name} className="preview-pdf" />;
+}
+
+function SecureVideoPreview({ file }) {
+  const [src, setSrc] = React.useState(null);
+  React.useEffect(() => {
+    let url;
+    (async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch(file.contentUrl, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+        if (!res.ok) throw new Error();
+        const blob = await res.blob();
+        url = URL.createObjectURL(blob);
+        setSrc(url);
+      } catch {
+        setSrc(null);
+      }
+    })();
+    return () => { if (url) URL.revokeObjectURL(url); };
+  }, [file.contentUrl]);
+  if (!src) return <div>Unable to preview video.</div>;
+  return <video src={src} controls className="preview-video">Your browser does not support the video tag.</video>;
+}
+
+function SecureOpenButton({ file }) {
+  const [blobUrl, setBlobUrl] = React.useState(null);
+  React.useEffect(() => {
+    let url;
+    (async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch(file.contentUrl, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+        if (!res.ok) throw new Error();
+        const blob = await res.blob();
+        url = URL.createObjectURL(blob);
+        setBlobUrl(url);
+      } catch {
+        setBlobUrl(null);
+      }
+    })();
+    return () => { if (url) URL.revokeObjectURL(url); };
+  }, [file.contentUrl]);
+  if (!blobUrl) return <button disabled className="view-button">Open</button>;
+  return <a href={blobUrl} target="_blank" rel="noopener noreferrer" className="view-button">Open</a>;
 }
 
 export default FileViewer;

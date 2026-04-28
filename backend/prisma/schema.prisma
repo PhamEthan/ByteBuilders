@@ -24,6 +24,8 @@ model User {
   registerToken String?   //temporary, for initial registration
 
   appointments Appointment[]
+  files        File[]      @relation("UserFiles")
+  auditLogs    AuditLog[]  @relation("UserAuditLogs")
 }
 
 model Appointment {
@@ -52,4 +54,29 @@ enum AppointmentStatus {
   AVAILABLE
   BOOKED
   CANCELLED
+}
+
+model File {
+  id           Int      @id @default(autoincrement())
+  name         String
+  storedName   String
+  path         String
+  size         Int
+  type         String
+  category     String
+  note         String?
+  uploadDate   DateTime @default(now())
+  uploader     User     @relation("UserFiles", fields: [uploaderId], references: [id])
+  uploaderId   Int
+  auditLogs    AuditLog[]  @relation("FileAuditLogs")
+}
+
+model AuditLog {
+  id        Int      @id @default(autoincrement())
+  user      User     @relation("UserAuditLogs", fields: [userId], references: [id])
+  userId    Int
+  action    String
+  file      File?    @relation("FileAuditLogs", fields: [fileId], references: [id])
+  fileId    Int?
+  timestamp DateTime @default(now())
 }

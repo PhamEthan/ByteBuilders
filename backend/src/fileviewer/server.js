@@ -1,12 +1,8 @@
-import express from 'express';
-import cors from 'cors';
-import multer from 'multer';
-import fs from 'fs/promises';
-import path, { dirname, extname, join } from 'path';
-import { fileURLToPath } from 'url';
-import crypto from 'crypto';
+
 
 const app = express();
+
+// ...existing code...
 const PORT = process.env.FILEVIEWER_PORT || 5004;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -41,16 +37,7 @@ async function ensureStorage() {
   }
 }
 
-async function readMetadata() {
-  await ensureStorage();
-  const fileContent = await fs.readFile(metadataFilePath, 'utf8');
-  return JSON.parse(fileContent);
-}
 
-async function writeMetadata(records) {
-  await ensureStorage();
-  await fs.writeFile(metadataFilePath, JSON.stringify(records, null, 2), 'utf8');
-}
 
 function toPublicRecord(req, record) {
   const baseUrl = `${req.protocol}://${req.get('host')}`;
@@ -96,65 +83,22 @@ const upload = multer({
   },
 });
 
-app.get('/files', async (req, res) => {
-  try {
-    const records = await readMetadata();
-    const sortedRecords = records
-      .sort((left, right) => right.uploadTimestamp - left.uploadTimestamp)
-      .map((record) => toPublicRecord(req, record));
 
-    res.json(sortedRecords);
-  } catch {
-    res.status(500).json({ message: 'Unable to load files.' });
-  }
-});
+// ...existing code...
 
-app.post('/files', upload.single('file'), async (req, res) => {
-  if (!req.file) {
-    res.status(400).json({ message: 'A file is required.' });
-    return;
-  }
+// PROTECTED: All other file routes require authentication
+app.use(authMiddleware);
 
-  try {
-    const records = await readMetadata();
-    const timestamp = Date.now();
-    const record = {
-      id: crypto.randomUUID(),
-      name: req.file.originalname,
-      storedName: req.file.filename,
-      path: req.file.path,
-      size: req.file.size,
-      type: req.file.mimetype,
-      category: req.body.category || 'Other',
-      note: req.body.note || '',
-      uploadDate: new Date(timestamp).toLocaleString(),
-      uploadTimestamp: timestamp,
-    };
-
-    records.push(record);
-    await writeMetadata(records);
-    res.status(201).json(toPublicRecord(req, record));
-  } catch {
-    if (req.file?.path) {
-      await fs.unlink(req.file.path).catch(() => {});
-    }
-
-    res.status(500).json({ message: 'Unable to save file.' });
-  }
-});
-
+// PROTECTED: File content and download endpoints (now require authentication)
 app.get('/files/:id/content', async (req, res) => {
   try {
-    const records = await readMetadata();
-    const record = records.find((entry) => entry.id === req.params.id);
-
-    if (!record) {
+    const file = await prisma.file.findUnique({ where: { id: Number(req.params.id) } });
+    if (!file) {
       res.status(404).json({ message: 'File not found.' });
       return;
     }
-
-    res.type(record.type);
-    res.sendFile(path.resolve(record.path));
+    res.type(file.type);
+    res.sendFile(path.resolve(file.path));
   } catch {
     res.status(500).json({ message: 'Unable to load file.' });
   }
@@ -162,33 +106,110 @@ app.get('/files/:id/content', async (req, res) => {
 
 app.get('/files/:id/download', async (req, res) => {
   try {
-    const records = await readMetadata();
-    const record = records.find((entry) => entry.id === req.params.id);
-
-    if (!record) {
+    const file = await prisma.file.findUnique({ where: { id: Number(req.params.id) } });
+    if (!file) {
       res.status(404).json({ message: 'File not found.' });
       return;
     }
-
-    res.download(path.resolve(record.path), record.name);
+    res.download(path.resolve(file.path), file.name);
   } catch {
     res.status(500).json({ message: 'Unable to download file.' });
   }
 });
 
+// Audit log to database
+async function auditLog(userId, action, fileName, fileId) {
+  try {
+    await prisma.auditLog.create({
+      data: {
+        userId,
+        action,
+        fileId: fileId || undefined,
+      }
+    });
+  } catch (e) {
+    console.error('Audit log error:', e.message);
+  }
+}
+
+app.get('/files', async (req, res) => {
+  try {
+    const files = await prisma.file.findMany({
+      orderBy: { uploadDate: 'desc' },
+      include: { uploader: true }
+    });
+    await auditLog(req.userId, 'list_files');
+    res.json(files.map((file) => ({
+      id: file.id,
+      name: file.name,
+      size: file.size,
+      type: file.type,
+      category: file.category,
+      note: file.note,
+      uploadDate: file.uploadDate,
+      uploader: file.uploader?.username,
+      contentUrl: `${req.protocol}://${req.get('host')}/files/${file.id}/content`,
+      downloadUrl: `${req.protocol}://${req.get('host')}/files/${file.id}/download`,
+    })));
+  } catch (e) {
+    res.status(500).json({ message: 'Unable to load files.' });
+  }
+});
+
+app.post('/files', upload.single('file'), async (req, res) => {
+  if (!req.file) {
+    await auditLog(req.userId, 'upload_failed', req.file?.originalname);
+    res.status(400).json({ message: 'A file is required.' });
+    return;
+  }
+  try {
+    const file = await prisma.file.create({
+      data: {
+        name: req.file.originalname,
+        storedName: req.file.filename,
+        path: req.file.path,
+        size: req.file.size,
+        type: req.file.mimetype,
+        category: req.body.category || 'Other',
+        note: req.body.note || '',
+        uploader: { connect: { id: req.userId } },
+      },
+      include: { uploader: true }
+    });
+    await auditLog(req.userId, 'upload', req.file.originalname, file.id);
+    res.status(201).json({
+      id: file.id,
+      name: file.name,
+      size: file.size,
+      type: file.type,
+      category: file.category,
+      note: file.note,
+      uploadDate: file.uploadDate,
+      uploader: file.uploader?.username,
+      contentUrl: `${req.protocol}://${req.get('host')}/files/${file.id}/content`,
+      downloadUrl: `${req.protocol}://${req.get('host')}/files/${file.id}/download`,
+    });
+  } catch (e) {
+    if (req.file?.path) {
+      await fs.unlink(req.file.path).catch(() => {});
+    }
+    await auditLog(req.userId, 'upload_failed', req.file?.originalname);
+    res.status(500).json({ message: 'Unable to save file.' });
+  }
+});
+
+// ...existing code...
+
 app.delete('/files/:id', async (req, res) => {
   try {
-    const records = await readMetadata();
-    const record = records.find((entry) => entry.id === req.params.id);
-
-    if (!record) {
+    const file = await prisma.file.findUnique({ where: { id: Number(req.params.id) } });
+    if (!file) {
       res.status(404).json({ message: 'File not found.' });
       return;
     }
-
-    const remainingRecords = records.filter((entry) => entry.id !== req.params.id);
-    await fs.unlink(record.path).catch(() => {});
-    await writeMetadata(remainingRecords);
+    await fs.unlink(file.path).catch(() => {});
+    await prisma.file.delete({ where: { id: file.id } });
+    await auditLog(req.userId, 'delete_file', file.name, file.id);
     res.status(204).send();
   } catch {
     res.status(500).json({ message: 'Unable to delete file.' });
