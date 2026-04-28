@@ -1,8 +1,10 @@
 .request-forms .hero-buttons{
-    display:flex;
+    display: flex;
     gap: 1rem;
     justify-content: center;
     flex-wrap: wrap;
+    margin-bottom: 2.5rem;
+    margin-top: 1.5rem;
 }
 
 .request-forms .hero-btn {

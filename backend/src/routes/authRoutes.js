@@ -206,8 +206,8 @@ router.post('/login', async(req, res) => {
         var cookieName = 'authcookie';
         res.cookie(cookieName, token, {
             httpOnly: true,
-            secure: true,
-            SameSite: "None",
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax',
         });
         res.status(201).json({token: token, name: user.fullName});
     } catch (err) {
@@ -221,8 +221,8 @@ router.post('/logout', async(req, res) => {
     //responds to the request with a clearCookie signal, deleting the user's auth cookie.
     res.clearCookie('authcookie', {
         httpOnly: true,
-        secure: true,
-        SameSite: "None",
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax',
     }).sendStatus(201);
 
 });

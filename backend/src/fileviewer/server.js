@@ -1,26 +1,49 @@
-import express from 'express';
-import cors from 'cors';
-import multer from 'multer';
-import path, { dirname, extname, join } from 'path';
-import fs from 'fs/promises';
-import crypto from 'crypto';
-import { fileURLToPath } from 'url';
-import prisma from '../prismaClient.js';
-import authMiddleware from '../middleware/authMiddleware.js';
 
+// Core dependencies and middleware imports
+import express from 'express';
+import cookieParser from 'cookie-parser'; // For parsing cookies (used for CSRF and auth)
+import csurf from 'csurf'; // CSRF protection middleware
+import cors from 'cors'; // Cross-Origin Resource Sharing
+import multer from 'multer'; // File upload middleware
+import path, { dirname, extname, join } from 'path';
+import fs from 'fs/promises'; // File system promises API
+import crypto from 'crypto'; // For generating random file names
+import { fileURLToPath } from 'url';
+import prisma from '../prismaClient.js'; // Prisma ORM client
+import authMiddleware from '../middleware/authMiddleware.js'; // Custom authentication middleware
+
+
+// Initialize Express app
 const app = express();
 
+// Parse cookies for CSRF and authentication
+app.use(cookieParser());
+
+// Enable CSRF protection for all routes
+app.use(csurf({ cookie: true }));
+
+// Endpoint to provide CSRF token to frontend
+app.get('/csrf-token', (req, res) => {
+  res.json({ csrfToken: req.csrfToken() });
+});
+
 // ...existing code...
+
+// Server port and file path setup
 const PORT = process.env.FILEVIEWER_PORT || 5004;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+// Storage directories for uploaded files and metadata
 const storageRoot = join(__dirname, '../../storage');
 const uploadDirectory = join(storageRoot, 'uploads');
 const dataDirectory = join(storageRoot, 'data');
 const metadataFilePath = join(dataDirectory, 'files.json');
 
-const allowedOrigins = ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002'];
+// Allowed CORS origins (localhost for dev)
+const allowedOrigins = [/^http:\/\/localhost:\d+$/];
+
+// Allowed MIME types for file uploads
 const allowedTypes = new Set([
   'image/jpeg', 'image/png', 'image/gif', 'image/webp',
   'application/pdf',
@@ -32,12 +55,25 @@ const allowedTypes = new Set([
   'video/mp4', 'video/quicktime',
 ]);
 
-app.use(cors({ origin: allowedOrigins, credentials: false }));
 
+// Enable CORS for allowed origins
+app.use(cors({
+  origin: (origin, callback) => {
+    // Allow all localhost ports
+    if (!origin || allowedOrigins.some(pattern => pattern.test(origin))) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true
+}));
+
+
+// Ensure storage directories and metadata file exist
 async function ensureStorage() {
   await fs.mkdir(uploadDirectory, { recursive: true });
   await fs.mkdir(dataDirectory, { recursive: true });
-
   try {
     await fs.access(metadataFilePath);
   } catch {
@@ -47,9 +83,10 @@ async function ensureStorage() {
 
 
 
+
+// Convert a file record to a public-facing object (for API responses)
 function toPublicRecord(req, record) {
   const baseUrl = `${req.protocol}://${req.get('host')}`;
-
   return {
     id: record.id,
     name: record.name,
@@ -64,7 +101,10 @@ function toPublicRecord(req, record) {
   };
 }
 
+
+// Multer storage configuration for file uploads
 const storage = multer.diskStorage({
+  // Ensure storage exists and set upload directory
   destination: async (req, file, cb) => {
     try {
       await ensureStorage();
@@ -73,20 +113,22 @@ const storage = multer.diskStorage({
       cb(error);
     }
   },
+  // Generate a unique filename for each upload
   filename: (req, file, cb) => {
     cb(null, `${Date.now()}-${crypto.randomUUID()}${extname(file.originalname)}`);
   },
 });
 
+
+// Multer middleware for handling file uploads
 const upload = multer({
   storage,
-  limits: { fileSize: 10 * 1024 * 1024 },
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB limit
   fileFilter: (req, file, cb) => {
     if (!allowedTypes.has(file.mimetype)) {
       cb(new Error('Unsupported file type.'));
       return;
     }
-
     cb(null, true);
   },
 });
@@ -94,14 +136,16 @@ const upload = multer({
 
 // ...existing code...
 
-// PROTECTED: All other file routes require authentication
+
+// All file routes below require authentication
 app.use(authMiddleware);
 
-// PROTECTED: File content and download endpoints (now require authentication)
+// Get file content (requires authentication and access control)
 app.get('/files/:id/content', async (req, res) => {
   try {
     const file = await prisma.file.findUnique({ where: { id: Number(req.params.id) } });
     if (!file) {
+      await auditLog(req.userId, 'file_not_found', 'unknown', Number(req.params.id));
       return res.status(404).json({ message: 'File not found.' });
     }
     const role = req.user.role;
@@ -130,10 +174,12 @@ app.get('/files/:id/content', async (req, res) => {
   }
 });
 
+// Download file (requires authentication and access control)
 app.get('/files/:id/download', async (req, res) => {
   try {
     const file = await prisma.file.findUnique({ where: { id: Number(req.params.id) } });
     if (!file) {
+      await auditLog(req.userId, 'file_not_found', 'unknown', Number(req.params.id));
       return res.status(404).json({ message: 'File not found.' });
     }
     const role = req.user.role;
@@ -161,21 +207,24 @@ app.get('/files/:id/download', async (req, res) => {
   }
 });
 
-// Audit log to database
+// Write an audit log entry to the database
 async function auditLog(userId, action, fileName, fileId) {
   try {
-    await prisma.auditLog.create({
-      data: {
-        userId,
-        action,
-        fileId: fileId || undefined,
-      }
-    });
+    const data = {
+      userId,
+      action
+    };
+    // Only include fileId if it is a valid number
+    if (typeof fileId === 'number' && !isNaN(fileId)) {
+      data.fileId = fileId;
+    }
+    await prisma.auditLog.create({ data });
   } catch (e) {
     console.error('Audit log error:', e.message);
   }
 }
 
+// List files available to the user (role-based)
 app.get('/files', async (req, res) => {
   try {
     const role = req.user.role;
@@ -223,6 +272,7 @@ app.get('/files', async (req, res) => {
   }
 });
 
+// Upload a new file (with audit logging)
 app.post('/files', upload.single('file'), async (req, res) => {
   if (!req.file) {
     await auditLog(req.userId, 'upload_failed', req.file?.originalname);
@@ -267,10 +317,12 @@ app.post('/files', upload.single('file'), async (req, res) => {
 
 // ...existing code...
 
+// Delete a file (requires authentication and access control)
 app.delete('/files/:id', async (req, res) => {
   try {
     const file = await prisma.file.findUnique({ where: { id: Number(req.params.id) } });
     if (!file) {
+      await auditLog(req.userId, 'file_not_found', 'unknown', Number(req.params.id));
       return res.status(404).json({ message: 'File not found.' });
     }
     const role = req.user.role;
@@ -288,6 +340,7 @@ app.delete('/files/:id', async (req, res) => {
       allowed = file.uploaderId === req.user.id;
     }
     if (!allowed) {
+      await auditLog(req.userId, 'access_denied', file.name, file.id);
       return res.status(403).json({ message: 'Access denied.' });
     }
     await fs.unlink(file.path).catch(() => {});
@@ -299,6 +352,7 @@ app.delete('/files/:id', async (req, res) => {
   }
 });
 
+// Error handler for file upload and other errors
 app.use((error, req, res, next) => {
   if (error instanceof multer.MulterError && error.code === 'LIMIT_FILE_SIZE') {
     res.status(400).json({ message: 'File exceeds the 10 MB limit.' });
@@ -313,6 +367,8 @@ app.use((error, req, res, next) => {
   next();
 });
 
+
+// Start the server after ensuring storage is ready
 ensureStorage().then(() => {
   app.listen(PORT, () => {
     console.log(`File viewer server started on port: ${PORT}`);

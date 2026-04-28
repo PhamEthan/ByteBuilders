@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import '../css/FileViewer.css';
 import { deleteFile, fetchFiles, uploadFile } from '../api/fileViewer';
+import { getFetchOptions } from '../api/fileViewer';
 import logo from '../assets/becausewecare_logo.jpg';
 import pdfIcon from '../assets/pdf.png';
 import docIcon from '../assets/doc.png';
@@ -9,6 +10,12 @@ import imgIcon from '../assets/img.png';
 import videoIcon from '../assets/video.png';
 import txtIcon from '../assets/txt.png';
 import fileIcon from '../assets/file.png';
+
+// Use this for all fetches to protected file content URLs
+function getSecureFetchOptions(options = {}) {
+  // Always include credentials (cookies) and any extra headers
+  return getFetchOptions(options);
+}
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const ALLOWED_TYPES = [
@@ -189,8 +196,7 @@ function FileViewer({ userRole = "" }) {
 
   async function downloadCurrentFile(file) {
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(file.contentUrl, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+      const res = await fetch(file.contentUrl, getSecureFetchOptions());
       if (!res.ok) throw new Error('Failed to download file');
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
@@ -443,8 +449,7 @@ function SecureTextPreview({ file }) {
   React.useEffect(() => {
     (async () => {
       try {
-        const token = localStorage.getItem('token');
-        const res = await fetch(file.contentUrl, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+        const res = await fetch(file.contentUrl, getSecureFetchOptions());
         if (!res.ok) throw new Error();
         const text = await res.text();
         // Show only the first 20 lines or 1000 chars
@@ -463,8 +468,7 @@ function SecureImageThumb({ file }) {
     let url;
     (async () => {
       try {
-        const token = localStorage.getItem('token');
-        const res = await fetch(file.contentUrl, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+        const res = await fetch(file.contentUrl, getSecureFetchOptions());
         if (!res.ok) throw new Error();
         const blob = await res.blob();
         url = URL.createObjectURL(blob);
@@ -485,8 +489,7 @@ function SecureImagePreview({ file }) {
     let url;
     (async () => {
       try {
-        const token = localStorage.getItem('token');
-        const res = await fetch(file.contentUrl, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+        const res = await fetch(file.contentUrl, getSecureFetchOptions());
         if (!res.ok) throw new Error();
         const blob = await res.blob();
         url = URL.createObjectURL(blob);
@@ -507,8 +510,7 @@ function SecureIframePreview({ file }) {
     let url;
     (async () => {
       try {
-        const token = localStorage.getItem('token');
-        const res = await fetch(file.contentUrl, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+        const res = await fetch(file.contentUrl, getSecureFetchOptions());
         if (!res.ok) throw new Error();
         const blob = await res.blob();
         url = URL.createObjectURL(blob);
@@ -529,8 +531,7 @@ function SecureVideoPreview({ file }) {
     let url;
     (async () => {
       try {
-        const token = localStorage.getItem('token');
-        const res = await fetch(file.contentUrl, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+        const res = await fetch(file.contentUrl, getSecureFetchOptions());
         if (!res.ok) throw new Error();
         const blob = await res.blob();
         url = URL.createObjectURL(blob);
@@ -551,8 +552,7 @@ function SecureOpenButton({ file }) {
     let url;
     (async () => {
       try {
-        const token = localStorage.getItem('token');
-        const res = await fetch(file.contentUrl, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+        const res = await fetch(file.contentUrl, getSecureFetchOptions());
         if (!res.ok) throw new Error();
         const blob = await res.blob();
         url = URL.createObjectURL(blob);
