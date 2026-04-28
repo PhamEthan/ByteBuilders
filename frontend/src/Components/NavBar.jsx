@@ -1,18 +1,21 @@
 import {Link} from "react-router-dom";
-import "../css/NavBar.css"
+import "../css/NavBar.css";
+import logo from "../assets/becausewecare_logo.jpg";
 
 
 function NavBar({handleChange, isChecked}) {
     return (
-        <nav classname="navbar">
+        <nav className="navbar">
             <div className="navbar-container">
                 <div className="navbar-brand">
-                    <Link to ="/">Because We Care</Link>
+                    <Link to="/" className="navbar-logo-link">
+                        <img src={logo} alt="Because We Care Logo" className="navbar-logo" />
+                        <span>Because We Care</span>
+                    </Link>
                 </div>
                 <div className="navbar-links">
-                    <Link to ="/about" className="nav-link">About Us</Link>
-
-                    <Link to ="/login" className="nav-link">
+                    <Link to="/about" className="nav-link">About Us</Link>
+                    <Link to="/login" className="nav-link">
                         <button className="button">
                             Log In
                         </button>
@@ -28,36 +31,36 @@ function NavBar({handleChange, isChecked}) {
                         <label htmlFor="check"></label>
                     </div>
                 </div>
-
             </div>
-
         </nav>
     );
 }
 
 function NavBarLoggedIn({handleChange, isChecked, curUser}) {
-    console.log(isChecked);
     return (
-        <nav classname="navbar">
+        <nav className="navbar">
             <div className="navbar-container">
                 <div className="navbar-brand">
-                    <Link to ="/">Because We Care</Link>
+                    <Link to="/" className="navbar-logo-link">
+                        <img src={logo} alt="Because We Care Logo" className="navbar-logo" />
+                        <span>Because We Care</span>
+                    </Link>
                 </div>
                 <div className="navbar-links">
-                    <Link to ="/about" className="nav-link">About Us</Link>
-                    <Link to ="/calendar" className="nav-link">Calendar</Link>
-                    <Link to ="/fileviewer" className="nav-link">Files</Link>
+                    <Link to="/about" className="nav-link">About Us</Link>
+                    <Link to="/calendar" className="nav-link">Calendar</Link>
+                    <Link to="/fileviewer" className="nav-link">Files</Link>
                     <Link to="/employee" className="nav-link">Employee Portal</Link>
                     <div className="logoutBox">
-                    <p className="text-formatted" value={curUser}> {curUser} </p>
-                    <Link to ="/logout" className="nav-link">
-                        <button className="button">
-                            Log Out
-                        </button>
-                    </Link>
+                        <p className="text-formatted" value={curUser}> {curUser} </p>
+                        <Link to="/logout" className="nav-link">
+                            <button className="button">
+                                Log Out
+                            </button>
+                        </Link>
                     </div>
                     <div className="toggle-container">
-                            <input 
+                        <input
                                 type="checkbox" 
                                 id="check" 
                                 className="toggle" 

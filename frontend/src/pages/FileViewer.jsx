@@ -1,6 +1,14 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import '../css/FileViewer.css';
 import { deleteFile, fetchFiles, uploadFile } from '../api/fileViewer';
+import logo from '../assets/becausewecare_logo.jpg';
+import pdfIcon from '../assets/pdf.png';
+import docIcon from '../assets/doc.png';
+import xlsIcon from '../assets/xls.png';
+import imgIcon from '../assets/img.png';
+import videoIcon from '../assets/video.png';
+import txtIcon from '../assets/txt.png';
+import fileIcon from '../assets/file.png';
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const ALLOWED_TYPES = [
@@ -34,26 +42,41 @@ function formatFileSize(bytes) {
   return `${(bytes / 1048576).toFixed(1)} MB`;
 }
 
+
+
 function getFileIcon(fileType, fileName) {
-  if (fileType.startsWith('image/')) return 'IMG';
-  if (fileType.includes('pdf')) return 'PDF';
-  if (fileType.includes('word') || fileName.endsWith('.doc') || fileName.endsWith('.docx')) return 'DOC';
-  if (fileType.includes('excel') || fileName.endsWith('.xls') || fileName.endsWith('.xlsx')) return 'XLS';
-  if (fileType.startsWith('video/')) return 'VID';
-  if (fileType.includes('text') || fileType.includes('csv')) return 'TXT';
-  return 'FILE';
+  if (fileType.startsWith('image/')) return <img src={imgIcon} alt="img" className="file-type-icon" />;
+  if (fileType.includes('pdf')) return <img src={pdfIcon} alt="pdf" className="file-type-icon" />;
+  if (fileType.includes('word') || fileName.endsWith('.doc') || fileName.endsWith('.docx')) return <img src={docIcon} alt="doc" className="file-type-icon" />;
+  if (fileType.includes('excel') || fileName.endsWith('.xls') || fileName.endsWith('.xlsx')) return <img src={xlsIcon} alt="xls" className="file-type-icon" />;
+  if (fileType.startsWith('video/')) return <img src={videoIcon} alt="video" className="file-type-icon" />;
+  if (fileType.includes('text') || fileType.includes('csv')) return <img src={txtIcon} alt="txt" className="file-type-icon" />;
+  return <img src={fileIcon} alt="file" className="file-type-icon" />;
 }
 
 function canPreview(file) {
   return file.type.startsWith('image/') || file.type === 'application/pdf' || file.type.startsWith('video/') || file.type.includes('text') || file.type.includes('csv');
 }
 
-function FileViewer() {
+function FileViewer({ userRole = "" }) {
+  // Header bar with logo
+  // Place this above the main file viewer content
   const [files, setFiles] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedFileCategory, setSelectedFileCategory] = useState('Medical Records');
+  // Example patient list for caregivers/admins; in real app, fetch from API
+  const [patients, setPatients] = useState([
+    'All Patients',
+    'Unassigned',
+    'John Smith',
+    'Mary Johnson',
+    'Robert Davis',
+    'Linda Wilson',
+    'James Brown',
+  ]);
+  const [selectedPatient, setSelectedPatient] = useState('All Patients');
   const [fileNote, setFileNote] = useState('');
   const [pageError, setPageError] = useState('');
   const [isDragging, setIsDragging] = useState(false);
@@ -186,7 +209,7 @@ function FileViewer() {
   return (
     <div className="file-viewer-page">
       <div className="file-viewer">
-        <h1>File Viewer</h1>
+
 
         {pageError && (
           <div className="upload-errors">
@@ -251,7 +274,7 @@ function FileViewer() {
         </div>
 
         <div className="filter-section">
-          <h3>Filter Files</h3>
+          <h3>Filters</h3>
           <div className="category-buttons">
             {CATEGORIES.map((category) => (
               <button
@@ -262,6 +285,42 @@ function FileViewer() {
                 {category}
               </button>
             ))}
+          </div>
+          <div className="filter-dropdowns" style={{ marginTop: 16 }}>
+            {(userRole === 'ADMIN' || userRole === 'CAREGIVER') && (
+              <div className="filter-group">
+                <label htmlFor="patient-select">Patient:</label>
+                <select
+                  id="patient-select"
+                  value={selectedPatient}
+                  onChange={e => setSelectedPatient(e.target.value)}
+                >
+                  {patients.map((p) => (
+                    <option key={p} value={p}>{p}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+            {/* Example: Add more dropdowns for status, tags, etc. for ADMIN */}
+            {userRole === 'ADMIN' && (
+              <div className="filter-group">
+                <label htmlFor="status-select">Status:</label>
+                <select id="status-select" defaultValue="All Statuses">
+                  <option>All Statuses</option>
+                  <option>Active</option>
+                  <option>Archived</option>
+                </select>
+              </div>
+            )}
+            {/* Patient role: minimal filters */}
+            {userRole === 'PATIENT' && (
+              <div className="filter-group">
+                <label htmlFor="patient-self">Patient:</label>
+                <select id="patient-self" disabled>
+                  <option>Me</option>
+                </select>
+              </div>
+            )}
           </div>
         </div>
 
@@ -330,6 +389,7 @@ function FileViewer() {
               <h3>{previewFile.name}</h3>
 
 
+
               {previewFile.type.startsWith('image/') && (
                 <SecureImagePreview file={previewFile} />
               )}
@@ -339,9 +399,11 @@ function FileViewer() {
               {previewFile.type.startsWith('video/') && (
                 <SecureVideoPreview file={previewFile} />
               )}
+
               {(previewFile.type.includes('text') || previewFile.type.includes('csv')) && (
-                <SecureIframePreview file={previewFile} />
+                <SecureTextPreview file={previewFile} />
               )}
+
 
               <div className="modal-actions">
                 <button onClick={() => downloadCurrentFile(previewFile)} className="download-button">Download</button>
@@ -372,6 +434,29 @@ function FileViewer() {
 }
 
 // --- SECURE FILE ACCESS HELPERS ---
+
+
+
+// Show a snippet of text/csv files in the preview modal
+function SecureTextPreview({ file }) {
+  const [snippet, setSnippet] = React.useState('Loading...');
+  React.useEffect(() => {
+    (async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch(file.contentUrl, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+        if (!res.ok) throw new Error();
+        const text = await res.text();
+        // Show only the first 20 lines or 1000 chars
+        const lines = text.split('\n').slice(0, 20).join('\n');
+        setSnippet(lines.length > 1000 ? lines.slice(0, 1000) + '\n... (truncated)' : lines);
+      } catch {
+        setSnippet('Unable to preview text.');
+      }
+    })();
+  }, [file.contentUrl]);
+  return <pre className="preview-text" style={{ maxHeight: 400, overflow: 'auto', background: '#f4f4f4', padding: 12 }}>{snippet}</pre>;
+}
 function SecureImageThumb({ file }) {
   const [src, setSrc] = React.useState(null);
   React.useEffect(() => {

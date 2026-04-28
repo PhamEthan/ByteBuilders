@@ -75,7 +75,7 @@ function App() {
         <Route path="/about" element={<About />} />
         <Route path="/calendar" element={<Navigate to="/" />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/fileviewer" element={<FileViewer />} />
+        <Route path="/fileviewer" element={<FileViewer userRole={userRole} />} />
         <Route path="/resetPassword" element={<ResetPassword />}/>
         <Route path="/verify" element={<Verify />}/>
         <Route path="/employee" element={<Navigate to="/" />} />
@@ -93,7 +93,7 @@ function App() {
         <Route path="/calendar" element={<Calendar />} />
         <Route path="/login" element={<Navigate to="/" />} />
         <Route path="/logout" element={<Logout />} />
-        <Route path="/fileviewer" element={<FileViewer />} />
+        <Route path="/fileviewer" element={<FileViewer userRole={userRole} />} />
         <Route path="/resetPassword" element={<ResetPassword />}/>
         <Route path="/verify" element={<Verify />}/>
         <Route path="/employee" element={<Employee userRole={userRole}/>} />
@@ -112,7 +112,7 @@ function App() {
         <Route path="/calendar" element={<Calendar />} />
         <Route path="/login" element={<Navigate to="/" />} />
         <Route path="/logout" element={<Logout />} />
-        <Route path="/fileviewer" element={<FileViewer />} />
+        <Route path="/fileviewer" element={<FileViewer userRole={userRole} />} />
         <Route path="/resetPassword" element={<ResetPassword />}/>
         <Route path="/verify" element={<Verify />}/>
         <Route path="/employee" element={<Navigate to="/" />} />

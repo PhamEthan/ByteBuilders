@@ -26,6 +26,9 @@ model User {
   appointments Appointment[]
   files        File[]      @relation("UserFiles")
   auditLogs    AuditLog[]  @relation("UserAuditLogs")
+
+  assignedPatients User[] @relation("CaregiverPatients", references: [id]) // For caregivers: patients assigned to them
+  caregivers User[] @relation("CaregiverPatients", references: [id])       // For patients: caregivers assigned to them
 }
 
 model Appointment {
