@@ -94,8 +94,11 @@ app.get('/files/:id/content', async (req, res) => {
   try {
     const file = await prisma.file.findUnique({ where: { id: Number(req.params.id) } });
     if (!file) {
-      res.status(404).json({ message: 'File not found.' });
-      return;
+      return res.status(404).json({ message: 'File not found.' });
+    }
+    const isAdmin = req.user.role === 'ADMIN';
+    if (!isAdmin && file.uploaderId !== req.user.id) {
+      return res.status(403).json({ message: 'Access denied.' });
     }
     res.type(file.type);
     res.sendFile(path.resolve(file.path));
@@ -108,8 +111,11 @@ app.get('/files/:id/download', async (req, res) => {
   try {
     const file = await prisma.file.findUnique({ where: { id: Number(req.params.id) } });
     if (!file) {
-      res.status(404).json({ message: 'File not found.' });
-      return;
+      return res.status(404).json({ message: 'File not found.' });
+    }
+    const isAdmin = req.user.role === 'ADMIN';
+    if (!isAdmin && file.uploaderId !== req.user.id) {
+      return res.status(403).json({ message: 'Access denied.' });
     }
     res.download(path.resolve(file.path), file.name);
   } catch {
@@ -134,7 +140,9 @@ async function auditLog(userId, action, fileName, fileId) {
 
 app.get('/files', async (req, res) => {
   try {
+    const isAdmin = req.user.role === 'ADMIN';
     const files = await prisma.file.findMany({
+      where: isAdmin ? {} : { uploaderId: req.user.id },
       orderBy: { uploadDate: 'desc' },
       include: { uploader: true }
     });
@@ -204,8 +212,11 @@ app.delete('/files/:id', async (req, res) => {
   try {
     const file = await prisma.file.findUnique({ where: { id: Number(req.params.id) } });
     if (!file) {
-      res.status(404).json({ message: 'File not found.' });
-      return;
+      return res.status(404).json({ message: 'File not found.' });
+    }
+    const isAdmin = req.user.role === 'ADMIN';
+    if (!isAdmin && file.uploaderId !== req.user.id) {
+      return res.status(403).json({ message: 'Access denied.' });
     }
     await fs.unlink(file.path).catch(() => {});
     await prisma.file.delete({ where: { id: file.id } });
