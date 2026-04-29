@@ -1,3 +1,282 @@
+/* --- Company-Ready Professional Theme --- */
+body, .app-container {
+  font-family: 'Inter', 'Roboto', 'Open Sans', Arial, sans-serif;
+  background: var(--bg-color, #f8fafc);
+  color: var(--primary-text, #22223b);
+  margin: 0;
+  padding: 0;
+}
+
+.file-viewer-page {
+  min-height: 100vh;
+  background: var(--bg-color, #f8fafc);
+  padding-top: 0;
+}
+
+.file-viewer {
+  max-width: 1100px;
+  margin: 32px auto 0 auto;
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 4px 24px rgba(38,49,89,0.10);
+  padding: 40px 40px 32px 40px;
+}
+
+.file-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 28px;
+}
+
+.file-card {
+  background: #f7fafd;
+  border: 1px solid #e0e7ef;
+  border-radius: 14px;
+  box-shadow: 0 2px 8px rgba(38,49,89,0.04);
+  padding: 24px 20px 20px 20px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  transition: box-shadow 0.2s, border-color 0.2s;
+}
+.file-card:hover {
+  box-shadow: 0 6px 24px rgba(38,49,89,0.10);
+  border-color: #ec4899;
+}
+
+.file-type-icon {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  display: block;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgba(38,49,89,0.06);
+  border: 1px solid #e0e7ef;
+  padding: 4px;
+}
+
+.file-info h3 {
+  margin: 0 0 10px 0;
+  color: #263159;
+  font-size: 1.15rem;
+  font-weight: 600;
+  word-break: break-word;
+}
+
+.file-category {
+  display: inline-block;
+  background: #ec4899;
+  color: #fff;
+  padding: 4px 14px;
+  border-radius: 15px;
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.file-note {
+  background: #fff3cd;
+  border-left: 3px solid #ffc107;
+  padding: 8px 12px;
+  margin: 8px 0;
+  font-style: italic;
+  color: #856404;
+  border-radius: 4px;
+}
+
+.file-info p {
+  margin: 5px 0;
+  color: #666;
+  font-size: 14px;
+}
+
+.upload-section {
+  background: #eaf0fb;
+  border: 2px solid #4F8A8B;
+  border-radius: 12px;
+  padding: 32px;
+  margin-bottom: 32px;
+}
+
+.upload-button {
+  background: linear-gradient(90deg, #ec4899 0%, #4F8A8B 100%);
+  color: #fff;
+  font-weight: 600;
+  border-radius: 8px;
+  padding: 12px 32px;
+  font-size: 1rem;
+  border: none;
+  box-shadow: 0 2px 8px rgba(38,49,89,0.08);
+  transition: background 0.2s, box-shadow 0.2s;
+}
+.upload-button:hover {
+  background: linear-gradient(90deg, #4F8A8B 0%, #ec4899 100%);
+  box-shadow: 0 4px 16px rgba(38,49,89,0.12);
+}
+
+.category-btn {
+  background: #fff;
+  color: #4F8A8B;
+  border: 2px solid #4F8A8B;
+  border-radius: 20px;
+  font-weight: 500;
+  transition: background 0.2s, color 0.2s;
+}
+.category-btn.active, .category-btn:hover {
+  background: #4F8A8B;
+  color: #fff;
+}
+
+.download-button, .view-button {
+  background: #263159;
+  color: #fff;
+  border-radius: 6px;
+  border: none;
+  padding: 8px 18px;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+.download-button:hover, .view-button:hover {
+  background: #ec4899;
+}
+
+/* End Company-Ready Professional Theme */
+/* --- Company-Ready Theme Enhancements --- */
+
+body {
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  font-family: 'Segoe UI', 'Roboto', 'Arial', sans-serif;
+}
+
+.header-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 72px;
+  background: #263159;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  border-bottom: none;
+  box-shadow: none;
+}
+
+.file-viewer-page {
+  min-height: 100vh;
+  background-color: var(--bg-color, #ffffff);
+  transition: background-color 0.3s ease-in-out;
+  padding-top: 72px;
+}
+
+.file-viewer {
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: none;
+  padding: 32px 32px 24px 32px;
+  margin-top: 0;
+}
+
+.file-viewer h1 {
+  color: #263159;
+  font-size: 2.2rem;
+  margin-bottom: 24px;
+  font-weight: 600;
+}
+
+.upload-section {
+  background: #eaf0fb;
+  border: 2px solid #4F8A8B;
+  border-radius: 12px;
+  padding: 32px;
+  margin-bottom: 32px;
+}
+
+.upload-button {
+  background: linear-gradient(90deg, #4F8A8B 0%, #263159 100%);
+  color: #fff;
+  font-weight: 600;
+  border-radius: 8px;
+  padding: 12px 32px;
+  font-size: 1rem;
+  border: none;
+  box-shadow: 0 2px 8px rgba(38,49,89,0.08);
+  transition: background 0.2s, box-shadow 0.2s;
+}
+.upload-button:hover {
+  background: linear-gradient(90deg, #263159 0%, #4F8A8B 100%);
+  box-shadow: 0 4px 16px rgba(38,49,89,0.12);
+}
+
+.file-card {
+  background: #f7fafd;
+  border: 1px solid #e0e7ef;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(38,49,89,0.04);
+  padding: 20px;
+  margin-bottom: 12px;
+  transition: box-shadow 0.2s, border-color 0.2s;
+}
+.file-card:hover {
+  box-shadow: 0 6px 24px rgba(38,49,89,0.10);
+  border-color: #4F8A8B;
+}
+
+.file-type-icon {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  display: block;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgba(38,49,89,0.06);
+  border: 1px solid #e0e7ef;
+  padding: 4px;
+}
+
+.category-btn {
+  background: #fff;
+  color: #4F8A8B;
+  border: 2px solid #4F8A8B;
+  border-radius: 20px;
+  font-weight: 500;
+  transition: background 0.2s, color 0.2s;
+}
+.category-btn.active, .category-btn:hover {
+  background: #4F8A8B;
+  color: #fff;
+}
+
+.modal-content, .confirm-dialog {
+  border-radius: 14px;
+  box-shadow: 0 4px 24px rgba(38,49,89,0.12);
+  background: #fff;
+}
+
+.download-button, .view-button {
+  background: #263159;
+  color: #fff;
+  border-radius: 6px;
+  border: none;
+  padding: 8px 18px;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+.download-button:hover, .view-button:hover {
+  background: #4F8A8B;
+}
+
+/* End Company-Ready Theme Enhancements */
+/* Standard file-type icon size */
+.file-type-icon {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  display: block;
+}
 /* Full-width page wrapper for dark mode background */
 .file-viewer-page {
   min-height: 100vh;
@@ -949,70 +1228,6 @@
     margin-left: 0;
     width: 100%;
   }
-}
-
-/* ══════════════════════════════════════
-   Role Toggle Bar
-   ══════════════════════════════════════ */
-.role-toggle-bar {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 12px 20px;
-  background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
-  border: 2px dashed #90caf9;
-  border-radius: 10px;
-  margin-bottom: 20px;
-  flex-wrap: wrap;
-}
-
-.role-toggle-group {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.role-toggle-group label {
-  font-weight: bold;
-  font-size: 13px;
-  color: #555;
-  white-space: nowrap;
-}
-
-.role-select {
-  padding: 6px 12px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  font-size: 14px;
-  cursor: pointer;
-  background: white;
-}
-
-.role-badge {
-  margin-left: auto;
-  font-weight: bold;
-  font-size: 14px;
-  padding: 6px 14px;
-  border-radius: 20px;
-  white-space: nowrap;
-}
-
-.role-admin {
-  background-color: #e8eaf6;
-  color: #283593;
-  border: 1px solid #5c6bc0;
-}
-
-.role-caregiver {
-  background-color: #e8f5e9;
-  color: #2e7d32;
-  border: 1px solid #66bb6a;
-}
-
-.role-patient {
-  background-color: #fff3e0;
-  color: #e65100;
-  border: 1px solid #ffb74d;
 }
 
 /* ══════════════════════════════════════
