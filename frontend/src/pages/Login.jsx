@@ -11,7 +11,7 @@ const PASS_REQUIREMENTS = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).+$/
 // ===== GLOBAL STATE =====
 let isAuthenticating = false
 
-const apiBase = 'http://localhost:5003/'
+const apiBase = 'https://becausewecare.onrender.com/'
 
 
 function Login(){

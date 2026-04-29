@@ -6,8 +6,7 @@ import interactionPlugin from "@fullcalendar/interaction";
 import { useState } from "react";
 
 // ===== GLOBAL STATE =====
-
-const apiBase = 'http://localhost:5003/'
+const apiBase = 'https://becausewecare.onrender.com/'
 
 
 function UserManagement(){
