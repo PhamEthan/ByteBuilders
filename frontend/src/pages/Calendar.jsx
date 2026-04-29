@@ -610,6 +610,7 @@ function Calendar(){
 
             const userLat = position.coords.latitude;
             const userLon = position.coords.longitude;
+            console.log(userLat, userLon);
             try {
                 // Convert address to coordinates using OpenStreetMap
 
