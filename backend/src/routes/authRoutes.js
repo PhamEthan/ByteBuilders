@@ -214,7 +214,7 @@ router.post('/login', async(req, res) => {
         console.log(err.message)
         res.sendStatus(503)
     }
-})
+});
 
 router.post('/logout', async(req, res) => {
 
