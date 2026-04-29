@@ -11,7 +11,7 @@ const PASS_REQUIREMENTS = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).+$/
 // ===== GLOBAL STATE =====
 let isAuthenticating = false
 
-const apiBase = 'http://localhost:5004/'
+const apiBase = 'https://becausewecare.onrender.com/'
 
 
 function Login(){
@@ -75,7 +75,6 @@ function Login(){
             <h1>{isLogin ? "Welcome Back!" : "Welcome!"}</h1>
             <div className="login-container">
                 <h2>{resetPassword ? "Reset Password" : (isLogin ? "Login" : "Register")}</h2>
-                
                 <form onSubmit={handleSubmit(onSubmit)} className="login-form">
                     <div className="form-group">
                         <label htmlFor="email" className="form-label">Email</label>
@@ -83,20 +82,16 @@ function Login(){
                             className="form-input"/>
                         <p className="error">{errors.email?.message}</p>
                     </div>
-
-                    {/* Hide both password input forms when resetting password, since we only need the email */}
-                    {!resetPassword && (
-                        <div className="form-group">
-                            <div className="password-field">
+                    <div className="form-group">
+                        <div className="password-field">
                             <label htmlFor="password" className="form-label">Password</label>
                             <input type="password"
                                 placeholder="******" {...register("password")} maxLength={MAX_PASS_LEN}
                                 className="form-input"/>
-                            </div>
-
-                            <p className="error">{errors.password?.message}</p>
                         </div>
-                    )}
+                        <p className="error">{errors.password?.message}</p>
+                    </div>
+
 
                     
 

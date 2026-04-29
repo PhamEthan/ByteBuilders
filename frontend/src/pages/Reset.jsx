@@ -7,9 +7,15 @@ import {
     useSearchParams
 } from "react-router-dom";
 
+
+
+const MAX_PASS_LEN = 20
+const MIN_PASS_LEN = 6
+const PASS_REQUIREMENTS = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).+$/
+
 // ===== GLOBAL STATE =====
 
-const apiBase = 'http://localhost:5003/'
+const apiBase = 'https://becausewecare.onrender.com/'
 
 function ResetPassword(){
 
@@ -21,8 +27,10 @@ function ResetPassword(){
 
 
     const pwResetSchema = yup.object().shape({
-        password: yup.string().min(4, "New password must be at least 4 characters").max(20,"New Password must be less than 20 characters").required("Password Required"),
-        confirmPassword: yup.string().oneOf([yup.ref("password"),null], "Passwords Don't Match").required("Re-enter Password")
+        password: yup.string().min(MIN_PASS_LEN, "Must be at least 6 characters").max(MAX_PASS_LEN,"Must be 20 characters or less")
+        .required("Password Required").matches(PASS_REQUIREMENTS, "Password must include uppercase, lowercase, a number, and a special character"),
+
+                                             confirmPassword: yup.string().oneOf([yup.ref("password"),null], "Passwords Don't Match").required("Re-enter Password")
     });
 
     const schema = pwResetSchema;
@@ -51,7 +59,7 @@ function ResetPassword(){
             <div className="password-field">
             <label htmlFor="password" className="form-label">Password</label>
             <input type="password"
-            placeholder="******" {...register("password")}
+            placeholder="******" {...register("password")} maxLength={MAX_PASS_LEN}
             className="form-input"/>
             </div>
 
@@ -63,11 +71,12 @@ function ResetPassword(){
 
 
         {!resetPassword && (
-            <div className="form-group">
+             <div className="form-group">
             <label htmlFor="confirmPassword" className="form-label">Confirm password</label>
             <input type="password"
             placeholder="******"
             {...register("confirmPassword")}
+            maxLength={MAX_PASS_LEN}
             className="form-input"/>
             <p className="error">{errors.confirmPassword?.message}</p>
             </div>

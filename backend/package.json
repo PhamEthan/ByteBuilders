@@ -26,6 +26,7 @@
     "@prisma/client": "^6.19.2",
     "bcryptjs": "^3.0.3",
     "cookie-parser": "^1.4.7",
+<<<<<<< HEAD
     "csurf": "^1.11.0",
     "express": "^5.2.1",
     "googleapis": "^166.0.0",
@@ -36,8 +37,18 @@
   "devDependencies": {
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",
+=======
+    "cors": "^2.8.6",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "googleapis": "^166.0.0",
+    "jsonwebtoken": "^9.0.3",
+>>>>>>> 87e2d1068e07ff09339d3a3f6e211eccaac6896a
     "nodemailer": "^8.0.1",
     "nodemon": "^3.1.11",
+    "pg": "^8.18.0",
     "prisma": "^6.19.2"
+  },
+  "devDependencies": {
   }
 }

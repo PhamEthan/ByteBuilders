@@ -6,7 +6,7 @@ import interactionPlugin from "@fullcalendar/interaction";
 import { useState } from "react";
 
 
-const apiBase = 'http://localhost:5003/'
+const apiBase = 'https://becausewecare.onrender.com/'
 
 const hours = [ "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"];
 const minutes = [ "00", "05", "10", "15","20", "25","30", "35","40", "45","50", "55"];
@@ -610,6 +610,7 @@ function Calendar(){
 
             const userLat = position.coords.latitude;
             const userLon = position.coords.longitude;
+            console.log(userLat, userLon);
             try {
                 // Convert address to coordinates using OpenStreetMap
 
@@ -643,8 +644,7 @@ function Calendar(){
                     console.log(curUserName);
                     setCheckInUser(curUserName);
 
-                    var checkInTimeString = caregiverName + "-" + patientName + "=" + description + "+" + curUserID + " checked in at: " + currentTime;
-
+                    var checkInTimeString = caregiverName + "-" + patientName + "=" + description + "+" + curUserName + " checked in at: " + currentTime.toLocaleString();
 
 
                     var formattedStart = new Date(selectedEvent.end);
