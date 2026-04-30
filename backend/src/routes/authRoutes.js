@@ -797,7 +797,6 @@ router.post("/verifyAcc", async(req, res) => {
         if(user.registerToken === token)
         {
 
-            const hashedPassword = bcrypt.hashSync(password, 8);
             const updatePass = await prisma.user.update({
                 where: {username : user.username},
                 data:  {verified: true, registerToken: "", fullName: fullName},
