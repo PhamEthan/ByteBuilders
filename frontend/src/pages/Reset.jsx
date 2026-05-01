@@ -15,7 +15,7 @@ const PASS_REQUIREMENTS = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).+$/
 
 // ===== GLOBAL STATE =====
 
-const apiBase = 'https://becausewecare.onrender.com/'
+const apiBase = 'http://localhost:5003/'
 
 function ResetPassword(){
 
