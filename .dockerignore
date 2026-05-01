@@ -1,0 +1,28 @@
+# Ignore node_modules everywhere
+node_modules
+
+# Ignore logs
+*.log
+
+# Ignore git
+.git
+
+# Ignore build output
+build
+dist
+
+# Ignore environment files
+.env
+.env.*
+
+# Ignore OS files
+.DS_Store
+Thumbs.db
+
+# Ignore uploads and storage (if not needed in image)
+backend/storage/uploads
+backend/storage/data
+
+# Ignore IDE/editor folders
+.vscode
+.idea

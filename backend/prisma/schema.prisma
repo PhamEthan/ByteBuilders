@@ -69,8 +69,8 @@ model File {
   category     String
   note         String?
   uploadDate   DateTime @default(now())
-  uploader     User     @relation("UserFiles", fields: [uploaderId], references: [id])
-  uploaderId   Int
+  uploader     User?    @relation("UserFiles", fields: [uploaderId], references: [id])
+  uploaderId   Int?
   auditLogs    AuditLog[]  @relation("FileAuditLogs")
 }
 
