@@ -1,7 +1,8 @@
 version: '3'
 services:
   app:
-    build: .
+    build:
+      context: ./backend
     container_name: caregiver-app
     environment:
       - DATABASE_URL=postgresql://postgres:postgres@db:5432/caregiverapp
@@ -12,8 +13,14 @@ services:
       - "5003:5003"
     depends_on:
       - db
-    volumes:
-      - .:/app
+  frontend:
+    build:
+      context: ./frontend
+    container_name: frontend-app
+    ports:
+      - "3000:80"
+    depends_on:
+      - app
   
   db:
     image: postgres:13-alpine

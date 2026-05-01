@@ -2,18 +2,15 @@ FROM node:22-alpine
 
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
+# Copy all files (including prisma)
+COPY . .
 
-# Copy prisma schema + migrations
-COPY prisma ./prisma
-
-# Install dependencies
-RUN npm install
+RUN rm -rf node_modules package-lock.json && npm install && npm install -g prisma
+RUN npx prisma --version
+RUN cat /app/prisma/schema.prisma || echo 'schema.prisma not found'
 RUN npx prisma generate
 
 # Copy rest of app
-COPY . .
 
 EXPOSE 5003
 
