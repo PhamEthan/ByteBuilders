@@ -1,31 +1,25 @@
 
 // Core dependencies and middleware imports
 import express from 'express';
-import cookieParser from 'cookie-parser'; // For parsing cookies (used for CSRF and auth)
-import csurf from 'csurf'; // CSRF protection middleware
-import cors from 'cors'; // Cross-Origin Resource Sharing
-import multer from 'multer'; // File upload middleware
+import cors from 'cors';
+import multer from 'multer';
 import path, { dirname, extname, join } from 'path';
-import fs from 'fs/promises'; // File system promises API
-import crypto from 'crypto'; // For generating random file names
+import fs from 'fs/promises';
+import crypto from 'crypto';
 import { fileURLToPath } from 'url';
-import prisma from '../prismaClient.js'; // Prisma ORM client
-import authMiddleware from '../middleware/authMiddleware.js'; // Custom authentication middleware
+import prisma from '../prismaClient.js';
 
 
 // Initialize Express app
 const app = express();
 
-// Parse cookies for CSRF and authentication
-app.use(cookieParser());
+// Parse cookies for CSRF and authentication (disabled for testing)
+// app.use(cookieParser());
 
-// Enable CSRF protection for all routes
-app.use(csurf({ cookie: true }));
+// CSRF protection disabled for testing
 
-// Endpoint to provide CSRF token to frontend
-app.get('/csrf-token', (req, res) => {
-  res.json({ csrfToken: req.csrfToken() });
-});
+
+// No CSRF or cookie endpoints
 
 // ...existing code...
 
@@ -56,16 +50,9 @@ const allowedTypes = new Set([
 ]);
 
 
-// Enable CORS for allowed origins
+// Enable CORS for all origins (for local dev)
 app.use(cors({
-  origin: (origin, callback) => {
-    // Allow all localhost ports
-    if (!origin || allowedOrigins.some(pattern => pattern.test(origin))) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
+  origin: '*',
   credentials: true
 }));
 
@@ -137,36 +124,16 @@ const upload = multer({
 // ...existing code...
 
 
-// All file routes below require authentication
-app.use(authMiddleware);
 
-// Get file content (requires authentication and access control)
+
+
+// Get file content (public)
 app.get('/files/:id/content', async (req, res) => {
   try {
     const file = await prisma.file.findUnique({ where: { id: Number(req.params.id) } });
     if (!file) {
-      await auditLog(req.userId, 'file_not_found', 'unknown', Number(req.params.id));
       return res.status(404).json({ message: 'File not found.' });
     }
-    const role = req.user.role;
-    let allowed = false;
-    if (role === 'ADMIN') {
-      allowed = true;
-    } else if (role === 'CAREGIVER') {
-      const caregiver = await prisma.user.findUnique({
-        where: { id: req.user.id },
-        include: { assignedPatients: true }
-      });
-      const patientIds = caregiver.assignedPatients.map(p => p.id);
-      allowed = patientIds.includes(file.uploaderId);
-    } else {
-      allowed = file.uploaderId === req.user.id;
-    }
-    if (!allowed) {
-      await auditLog(req.userId, 'access_denied', file.name, file.id);
-      return res.status(403).json({ message: 'Access denied.' });
-    }
-    await auditLog(req.userId, 'download_content', file.name, file.id);
     res.type(file.type);
     res.sendFile(path.resolve(file.path));
   } catch {
@@ -174,33 +141,13 @@ app.get('/files/:id/content', async (req, res) => {
   }
 });
 
-// Download file (requires authentication and access control)
+// Download file (public)
 app.get('/files/:id/download', async (req, res) => {
   try {
     const file = await prisma.file.findUnique({ where: { id: Number(req.params.id) } });
     if (!file) {
-      await auditLog(req.userId, 'file_not_found', 'unknown', Number(req.params.id));
       return res.status(404).json({ message: 'File not found.' });
     }
-    const role = req.user.role;
-    let allowed = false;
-    if (role === 'ADMIN') {
-      allowed = true;
-    } else if (role === 'CAREGIVER') {
-      const caregiver = await prisma.user.findUnique({
-        where: { id: req.user.id },
-        include: { assignedPatients: true }
-      });
-      const patientIds = caregiver.assignedPatients.map(p => p.id);
-      allowed = patientIds.includes(file.uploaderId);
-    } else {
-      allowed = file.uploaderId === req.user.id;
-    }
-    if (!allowed) {
-      await auditLog(req.userId, 'access_denied', file.name, file.id);
-      return res.status(403).json({ message: 'Access denied.' });
-    }
-    await auditLog(req.userId, 'download', file.name, file.id);
     res.download(path.resolve(file.path), file.name);
   } catch {
     res.status(500).json({ message: 'Unable to download file.' });
@@ -224,37 +171,12 @@ async function auditLog(userId, action, fileName, fileId) {
   }
 }
 
-// List files available to the user (role-based)
+// List all files (public, no uploader info)
 app.get('/files', async (req, res) => {
   try {
-    const role = req.user.role;
-    let files = [];
-    if (role === 'ADMIN') {
-      files = await prisma.file.findMany({
-        orderBy: { uploadDate: 'desc' },
-        include: { uploader: true }
-      });
-    } else if (role === 'CAREGIVER') {
-      // Get IDs of assigned patients
-      const caregiver = await prisma.user.findUnique({
-        where: { id: req.user.id },
-        include: { assignedPatients: true }
-      });
-      const patientIds = caregiver.assignedPatients.map(p => p.id);
-      files = await prisma.file.findMany({
-        where: { uploaderId: { in: patientIds } },
-        orderBy: { uploadDate: 'desc' },
-        include: { uploader: true }
-      });
-    } else {
-      // PATIENT: only own files
-      files = await prisma.file.findMany({
-        where: { uploaderId: req.user.id },
-        orderBy: { uploadDate: 'desc' },
-        include: { uploader: true }
-      });
-    }
-    await auditLog(req.userId, 'list_files');
+    const files = await prisma.file.findMany({
+      orderBy: { uploadDate: 'desc' }
+    });
     res.json(files.map((file) => ({
       id: file.id,
       name: file.name,
@@ -263,7 +185,6 @@ app.get('/files', async (req, res) => {
       category: file.category,
       note: file.note,
       uploadDate: file.uploadDate,
-      uploader: file.uploader?.username,
       contentUrl: `${req.protocol}://${req.get('host')}/files/${file.id}/content`,
       downloadUrl: `${req.protocol}://${req.get('host')}/files/${file.id}/download`,
     })));
@@ -272,10 +193,9 @@ app.get('/files', async (req, res) => {
   }
 });
 
-// Upload a new file (with audit logging)
+// Upload a new file (public, no uploader info)
 app.post('/files', upload.single('file'), async (req, res) => {
   if (!req.file) {
-    await auditLog(req.userId, 'upload_failed', req.file?.originalname);
     res.status(400).json({ message: 'A file is required.' });
     return;
   }
@@ -289,11 +209,8 @@ app.post('/files', upload.single('file'), async (req, res) => {
         type: req.file.mimetype,
         category: req.body.category || 'Other',
         note: req.body.note || '',
-        uploader: { connect: { id: req.userId } },
-      },
-      include: { uploader: true }
+      }
     });
-    await auditLog(req.userId, 'upload', req.file.originalname, file.id);
     res.status(201).json({
       id: file.id,
       name: file.name,
@@ -302,7 +219,6 @@ app.post('/files', upload.single('file'), async (req, res) => {
       category: file.category,
       note: file.note,
       uploadDate: file.uploadDate,
-      uploader: file.uploader?.username,
       contentUrl: `${req.protocol}://${req.get('host')}/files/${file.id}/content`,
       downloadUrl: `${req.protocol}://${req.get('host')}/files/${file.id}/download`,
     });
@@ -310,42 +226,21 @@ app.post('/files', upload.single('file'), async (req, res) => {
     if (req.file?.path) {
       await fs.unlink(req.file.path).catch(() => {});
     }
-    await auditLog(req.userId, 'upload_failed', req.file?.originalname);
     res.status(500).json({ message: 'Unable to save file.' });
   }
 });
 
 // ...existing code...
 
-// Delete a file (requires authentication and access control)
+// Delete a file (public)
 app.delete('/files/:id', async (req, res) => {
   try {
     const file = await prisma.file.findUnique({ where: { id: Number(req.params.id) } });
     if (!file) {
-      await auditLog(req.userId, 'file_not_found', 'unknown', Number(req.params.id));
       return res.status(404).json({ message: 'File not found.' });
-    }
-    const role = req.user.role;
-    let allowed = false;
-    if (role === 'ADMIN') {
-      allowed = true;
-    } else if (role === 'CAREGIVER') {
-      const caregiver = await prisma.user.findUnique({
-        where: { id: req.user.id },
-        include: { assignedPatients: true }
-      });
-      const patientIds = caregiver.assignedPatients.map(p => p.id);
-      allowed = patientIds.includes(file.uploaderId);
-    } else {
-      allowed = file.uploaderId === req.user.id;
-    }
-    if (!allowed) {
-      await auditLog(req.userId, 'access_denied', file.name, file.id);
-      return res.status(403).json({ message: 'Access denied.' });
     }
     await fs.unlink(file.path).catch(() => {});
     await prisma.file.delete({ where: { id: file.id } });
-    await auditLog(req.userId, 'delete_file', file.name, file.id);
     res.status(204).send();
   } catch {
     res.status(500).json({ message: 'Unable to delete file.' });

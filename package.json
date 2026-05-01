@@ -25,6 +25,7 @@
   "dependencies": {
     "@prisma/client": "^6.18.0",
     "bcryptjs": "^3.0.3",
+    "dotenv": "^17.4.2",
     "express": "^5.1.0",
     "googleapis": "^166.0.0",
     "jsonwebtoken": "^9.0.2",

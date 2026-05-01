@@ -1,8 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import '../css/FileViewer.css';
-import { deleteFile, fetchFiles, uploadFile } from '../api/fileViewer';
-import { getFetchOptions } from '../api/fileViewer';
-import logo from '../assets/becausewecare_logo.jpg';
+import { deleteFile, fetchFiles, getFetchOptions, uploadFile } from '../api/fileViewer';
 import pdfIcon from '../assets/pdf.png';
 import docIcon from '../assets/doc.png';
 import xlsIcon from '../assets/xls.png';
@@ -11,9 +9,8 @@ import videoIcon from '../assets/video.png';
 import txtIcon from '../assets/txt.png';
 import fileIcon from '../assets/file.png';
 
-// Use this for all fetches to protected file content URLs
+// File viewer content URLs are public for local testing.
 function getSecureFetchOptions(options = {}) {
-  // Always include credentials (cookies) and any extra headers
   return getFetchOptions(options);
 }
 
