@@ -22,11 +22,7 @@ router.post('/register', async (req, res) => {
     const { username, password } = req.body
     // save user name and encrypted password
     // save email@gmail.com | wadawfawfawf.awfafawfa.wf
-
-    //Creates a temporary password
-    const tempPassword = crypto.randomBytes(5).toString("hex");
-    //encrypt password
-    const hashedPassword = bcrypt.hashSync(tempPassword, 8)
+    const hashedPassword = bcrypt.hashSync(password, 8);
 
     const regtoken = crypto.randomBytes(20).toString("hex");
     const registrationToken = crypto.createHash("sha256").update(regtoken).digest("hex");

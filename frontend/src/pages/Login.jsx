@@ -82,15 +82,19 @@ function Login(){
                             className="form-input"/>
                         <p className="error">{errors.email?.message}</p>
                     </div>
-                    <div className="form-group">
+                    {/* Hide both password input forms when resetting password, since we only need the email */}
+                    {!resetPassword && (
+                        <div className="form-group">
                         <div className="password-field">
-                            <label htmlFor="password" className="form-label">Password</label>
-                            <input type="password"
-                                placeholder="******" {...register("password")} maxLength={MAX_PASS_LEN}
-                                className="form-input"/>
+                        <label htmlFor="password" className="form-label">Password</label>
+                        <input type="password"
+                        placeholder="******" {...register("password")}
+                        className="form-input"/>
                         </div>
+
                         <p className="error">{errors.password?.message}</p>
-                    </div>
+                        </div>
+                    )}
 
 
                     
